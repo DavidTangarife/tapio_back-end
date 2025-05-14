@@ -1,68 +1,72 @@
-import { google, Auth } from 'googleapis';
+import Connection from "node-imap";
 
-//========================================
-// Get a new Google Auth Client with required credentials
-// GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET need to be set
-// in environment varables.
-//========================================
-export function get_google_auth_client() {
-  const oauth2Client: Auth.OAuth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    'http://localhost:3000/oauth2callback'
-  );
-  return oauth2Client;
-};
+var Imap = require('node-imap'), inspect = require('util').inspect;
 
-//========================================
-// Get the Google Auth URL for Tapio.
-// This is used to return the Google Auth code.
-//========================================
-export function get_google_auth_url_email(client: Auth.OAuth2Client, state: string) {
-  const url: string = client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: 'email',
-    state: state,
-    include_granted_scopes: true
-  });
-  return url;
-};
-
-export function get_google_auth_url_imap(client: Auth.OAuth2Client) {
-  const url: string = client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: 'email',
-    include_granted_scopes: true
-  });
-  return url;
-};
-
-//=========================================
-// Read the Google Auth code and get tokens.
-//=========================================
-export async function get_google_auth_tokens(client: Auth.OAuth2Client, code: any) {
-  let { tokens } = await client.getToken(code);
-  return tokens;
-};
-
-//========================================
-// Set Credentials on Google Auth Client.
-//========================================
-export function set_credentials_on_client(client: Auth.OAuth2Client, tokens: any) {
-  client.setCredentials(tokens);
-  return client;
+// =============================================================
+// Get the imap connection object with the users authentication
+// =============================================================
+export function get_imap_connection(email: string, xoauth2: string) {
+  let imap: Connection = new Imap({
+    user: email,
+    xoauth2: xoauth2,
+    host: 'imap.gmail.com',
+    port: 993,
+    tls: true,
+    tlsOptions: { servername: 'imap.gmail.com' }
+  })
 }
 
-//=======================================
-// Get user email from the provided tokens.
-//=======================================
-export async function get_user_email(client: Auth.OAuth2Client, id_token: string) {
-  const ticket = await client.verifyIdToken({
-    idToken: id_token
+// ===================================================================
+// This function is used to attach commands to the imap connection.
+// If you pass this a callback, it will run when you do imap.connect()
+// ===================================================================
+function open_inbox(callback: any, imap: Connection) {
+  imap.openBox('INBOX', true, callback)
+}
+
+// ===================================================================
+// This is a sample of a callback to get the sender and subject of the
+// most recent email.
+// ===================================================================
+function most_recent_sender_and_subject_callback(imap: Connection) {
+  imap.once('ready', function() {
+    open_inbox(function(err: any, box: any) {
+      if (err) throw err;
+      var f = imap.seq.fetch(box.messages.total + ':*', { bodies: ['HEADER.FIELDS (FROM SUBJECT)', 'TEXT'] });
+      f.on('message', function(msg, seqno) {
+        console.log('Message #%d', seqno);
+        var prefix = '(#' + seqno + ') ';
+        msg.on('body', function(stream, info) {
+          if (info.which === 'TEXT')
+            console.log(prefix + 'Body [%s] found, %d total bytes', inspect(info.which), info.size);
+          var buffer = '', count = 0;
+          stream.on('data', function(chunk) {
+            count += chunk.length;
+            buffer += chunk.toString('utf8');
+            if (info.which === 'TEXT')
+              console.log(prefix + 'Body [%s] (%d/%d)', inspect(info.which), count, info.size);
+          });
+          stream.once('end', function() {
+            if (info.which !== 'TEXT')
+              console.log(prefix + 'Parsed header: %s', inspect(Imap.parseHeader(buffer)));
+            else
+              console.log(prefix + 'Body [%s] Finished', inspect(info.which));
+          });
+        });
+        msg.once('attributes', function(attrs) {
+          console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
+        });
+        msg.once('end', function() {
+          console.log(prefix + 'Finished');
+        });
+      });
+      f.once('error', function(err) {
+        console.log('Fetch error: ' + err);
+      });
+      f.once('end', function() {
+        console.log('Done fetching all messages!');
+        imap.end();
+      });
+    }, imap);
   });
-  const payload = ticket.getPayload()
-  const email = payload?.email
-  return email;
 };

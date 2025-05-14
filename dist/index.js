@@ -7,13 +7,13 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const url_1 = __importDefault(require("url"));
 const node_crypto_1 = require("node:crypto");
-const imap_1 = require("./services/imap");
+const google_1 = require("./services/google");
 const session = require('express-session');
 dotenv_1.default.config();
 // Initialize the app
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
-const client = (0, imap_1.get_google_auth_client)();
+const client = (0, google_1.get_google_auth_client)();
 // The session middleware will be used to validate requests with a state variable.
 // This variable is a 32 byte hex string and is sent to the google oauth2 server.
 app.use(session({
@@ -27,9 +27,10 @@ app.get('/', async function (req, res) {
     const state = (0, node_crypto_1.randomBytes)(32).toString('hex');
     req.session.state = state;
     // Build the Google Auth url.
-    const url = (0, imap_1.get_google_auth_url_email)(client, state);
+    const url = (0, google_1.get_google_auth_url_email)(client, state);
     res.send(`Welcome to Tapio, <a href=${url}>Connect to google?</a>`);
 });
+// oauth2 callback uri for processing the users email from google oAuth2
 app.get('/oauth2callback', async (req, res) => {
     var _a;
     const q = url_1.default.parse(req.url || '', true).query;
@@ -41,12 +42,19 @@ app.get('/oauth2callback', async (req, res) => {
         res.end('State Mismatch. Possible CSRF attack. Rejecting.');
     }
     else {
-        let data = {};
-        const promise = client.getToken(((_a = q.code) === null || _a === void 0 ? void 0 : _a.toString()) || '');
-        promise.then((value) => {
-            data = value;
-        });
-        console.log(data);
+        //====================================================================================================
+        // Typescript is finicky about passing in strings that may not exist or may be empty.
+        // The ? means code may be undefined. We force it to a string so it isn't a string[] type
+        // Google also occasionally encodes the access code and replaces any instances of / 'with %2F'
+        // the || '' is because the function needs to recieve a string so we tell TS it'll be an empty string
+        // if we really screwed up.
+        //====================================================================================================
+        if (q.code !== undefined) {
+            const { tokens } = await client.getToken(q.code.toString().replace('%2F', '/'));
+            const { email } = await client.getTokenInfo(((_a = tokens.access_token) === null || _a === void 0 ? void 0 : _a.toString()) || '');
+            console.log(tokens);
+            res.send(`Lets see if that worked! Your email is: ${email}<br>How about we <a href=${(0, google_1.get_google_auth_url_imap)(client)}>connect your email?</a>`);
+        }
     }
 });
 app.listen(port, () => {

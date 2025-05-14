@@ -25,7 +25,7 @@ function get_google_auth_url_email(client, state) {
     const url = client.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
-        scope: 'email',
+        scope: ['email', 'https://mail.google.com/'],
         state: state,
         include_granted_scopes: true
     });
@@ -36,7 +36,7 @@ function get_google_auth_url_imap(client) {
     const url = client.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
-        scope: 'email',
+        scope: 'mail.google.com',
         include_granted_scopes: true
     });
     return url;

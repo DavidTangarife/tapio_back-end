@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@types/express-session": "^1.18.1",
+    "@types/node-imap": "^0.9.3",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",

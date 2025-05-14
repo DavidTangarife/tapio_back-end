@@ -2,7 +2,8 @@ import express, { Express, Request, Response, Application } from 'express';
 import dotenv from 'dotenv';
 import url from 'url';
 import { randomBytes } from 'node:crypto';
-import { get_google_auth_client, get_google_auth_tokens, get_google_auth_url_email } from './services/imap';
+import { get_google_auth_client, get_google_auth_tokens, get_google_auth_url_email, get_google_auth_url_imap } from './services/google';
+import { get_xoauth2_generator, get_xoauth2_token } from './services/xoauth2';
 const session = require('express-session')
 
 dotenv.config()
@@ -60,11 +61,12 @@ app.get('/oauth2callback', async (req: Request, res: Response) => {
     // the || '' is because the function needs to recieve a string so we tell TS it'll be an empty string
     // if we really screwed up.
     //====================================================================================================
-    const { tokens } = await client.getToken(q.code?.toString().replace('%2F', '/') || '');
-    const { email } = await client.getTokenInfo(tokens.access_token?.toString() || '')
-    console.log(tokens);
-    console.log(email)
-    res.send(`Lets see if that worked! ${email}`)
+    if (q.code !== undefined) {
+      const { tokens } = await client.getToken(q.code.toString().replace('%2F', '/'));
+      const { email } = await client.getTokenInfo(tokens.access_token?.toString() || '')
+      const generator = get_xoauth2_generator(email || '', tokens.refresh_token || '', tokens.access_token || '')
+      res.send(`Lets see if that worked! Your email is: ${email}<br>Your xoauth2token is ${token}`)
+    }
   }
 }
 )

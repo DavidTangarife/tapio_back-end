@@ -8,6 +8,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const url_1 = __importDefault(require("url"));
 const node_crypto_1 = require("node:crypto");
 const google_1 = require("./services/google");
+const xoauth2_1 = require("./services/xoauth2");
 const session = require('express-session');
 dotenv_1.default.config();
 // Initialize the app
@@ -52,8 +53,9 @@ app.get('/oauth2callback', async (req, res) => {
         if (q.code !== undefined) {
             const { tokens } = await client.getToken(q.code.toString().replace('%2F', '/'));
             const { email } = await client.getTokenInfo(((_a = tokens.access_token) === null || _a === void 0 ? void 0 : _a.toString()) || '');
-            console.log(tokens);
-            res.send(`Lets see if that worked! Your email is: ${email}<br>How about we <a href=${(0, google_1.get_google_auth_url_imap)(client)}>connect your email?</a>`);
+            const generator = (0, xoauth2_1.get_xoauth2_generator)(email || '', tokens.refresh_token || '', tokens.access_token || '');
+            const token = await generator.getToken(function (err, token) { return token; });
+            setTimeout(function () { res.send(`Lets see if that worked! Your email is: ${email}<br>Your xoauth2token is ${token}`); }, 0);
         }
     }
 });

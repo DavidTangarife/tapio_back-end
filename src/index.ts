@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import url from 'url';
 import { randomBytes } from 'node:crypto';
 import { get_google_auth_client, get_google_auth_tokens, get_google_auth_url_email, get_google_auth_url_imap } from './services/google';
-import { get_xoauth2_generator, get_xoauth2_token } from './services/xoauth2';
+import { generateTokenPromise, get_xoauth2_generator, get_xoauth2_token } from './services/xoauth2';
+import { get_imap_connection, sender_and_subject_since_date_callback } from './services/imap';
 const session = require('express-session')
 
 dotenv.config()
@@ -65,11 +66,20 @@ app.get('/oauth2callback', async (req: Request, res: Response) => {
       const { tokens } = await client.getToken(q.code.toString().replace('%2F', '/'));
       const { email } = await client.getTokenInfo(tokens.access_token?.toString() || '')
       const generator = get_xoauth2_generator(email || '', tokens.refresh_token || '', tokens.access_token || '')
-      res.send(`Lets see if that worked! Your email is: ${email}<br>Your xoauth2token is ${token}`)
+      let date: Date = new Date()
+      date.setDate(date.getDate() - 7);
+      console.log(date)
+      generator.getToken((err: string, token: string) => {
+        if (err) {
+          console.log(err)
+        }
+        const connection = get_imap_connection(email || '', token)
+        sender_and_subject_since_date_callback(connection, date.toISOString(), res)
+        connection.connect()
+      })
     }
   }
-}
-)
+})
 
 app.listen(port, () => {
   console.log('Server running on https://localhost:${port}')

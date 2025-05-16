@@ -29,3 +29,13 @@ export async function get_xoauth2_token(xoauth2gen: any) {
   return token
 }
 
+export async function generateTokenPromise(xoauth2gen: any) {
+  return new Promise(resolve => {
+    resolve(xoauth2gen.getToken((err: string, token: string) => {
+      if (err) {
+        console.log(err)
+      }
+      return token
+    }))
+  })
+}

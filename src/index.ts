@@ -82,7 +82,7 @@ app.get('/', async function(req: Request, res: Response) {
   // Build the Google Auth url.
   const url = get_google_auth_url_email(google_client, state)
 
-  res.send(`Welcome to Tapio, <a href=${url}>Connect to google?</a>`);
+  res.send(`Welcome to Tapio, <br><a href=${url}>Connect to google?</a><br><a href='/microsoftsignin'>Connect to Microsoft</a>`);
 })
 
 // oauth2 callback uri for processing the users email from google oAuth2

@@ -1,11 +1,14 @@
-import express, { Express, Request, Response, Application } from 'express';
+import express, { Request, Response, Application } from 'express';
 import dotenv from 'dotenv';
 import url from 'url';
 import { randomBytes } from 'node:crypto';
-import { get_google_auth_client, get_google_auth_tokens, get_google_auth_url_email, get_google_auth_url_imap } from './services/google';
-import { generateTokenPromise, get_xoauth2_generator, get_xoauth2_token } from './services/xoauth2';
-import { get_imap_connection, sender_and_subject_since_date_callback } from './services/imap';
+import { get_google_auth_client, get_google_auth_url_email } from './services/google';
+import { get_xoauth2_generator } from './services/xoauth2';
+import { get_imap_connection, get_imap_connection_ms, sender_and_subject_since_date_callback } from './services/imap';
+import { authProvider, confidentialClient } from './services/microsoft';
 const session = require('express-session')
+import { Session } from 'express-session';
+import { AuthorizationCodeRequest, AuthorizationUrlRequest, ConfidentialClientApplication, CryptoProvider } from '@azure/msal-node';
 
 dotenv.config()
 
@@ -13,6 +16,16 @@ dotenv.config()
 declare module 'express-session' {
   interface SessionData {
     state: string;
+    csrfToken?: any;
+    authCodeRequest?: any;
+    pkceCodes?: any;
+    tokenCache?: any;
+    idToken?: any;
+    account?: any;
+    access?: any;
+    refresh?: any;
+    isAuthenticated?: boolean;
+    authCodeUrlRequest?: any;
   }
 }
 
@@ -20,10 +33,37 @@ type Tokens = {
   tokens: string
 }
 
+
+type RequestWithPKCE = Request & {
+  session: Session & {
+    pkceCodes: {
+      challengeMethod: string;
+      challenge?: string;
+      verifier?: string;
+    };
+  };
+}
+
+declare global {
+  namespace Express {
+    interface RequestWithPKCE extends Request {
+      session: Session & {
+        pkceCodes: {
+          challengeMethod: string;
+          challenge?: string;
+          verifier?: string;
+        };
+      };
+    }
+  }
+}
+
 // Initialize the app
 const app: Application = express();
 const port = process.env.PORT || 3000;
-const client = get_google_auth_client()
+const google_client = get_google_auth_client()
+const prov = authProvider;
+const microsoft_client = confidentialClient;
 
 // The session middleware will be used to validate requests with a state variable.
 // This variable is a 32 byte hex string and is sent to the google oauth2 server.
@@ -40,7 +80,7 @@ app.get('/', async function(req: Request, res: Response) {
   req.session.state = state;
 
   // Build the Google Auth url.
-  const url = get_google_auth_url_email(client, state)
+  const url = get_google_auth_url_email(google_client, state)
 
   res.send(`Welcome to Tapio, <a href=${url}>Connect to google?</a>`);
 })
@@ -63,8 +103,8 @@ app.get('/oauth2callback', async (req: Request, res: Response) => {
     // if we really screwed up.
     //====================================================================================================
     if (q.code !== undefined) {
-      const { tokens } = await client.getToken(q.code.toString().replace('%2F', '/'));
-      const { email } = await client.getTokenInfo(tokens.access_token?.toString() || '')
+      const { tokens } = await google_client.getToken(q.code.toString().replace('%2F', '/'));
+      const { email } = await google_client.getTokenInfo(tokens.access_token?.toString() || '')
       const generator = get_xoauth2_generator(email || '', tokens.refresh_token || '', tokens.access_token || '')
       let date: Date = new Date()
       date.setDate(date.getDate() - 7);
@@ -73,11 +113,66 @@ app.get('/oauth2callback', async (req: Request, res: Response) => {
         if (err) {
           console.log(err)
         }
+        console.log(token)
         const connection = get_imap_connection(email || '', token)
         sender_and_subject_since_date_callback(connection, date.toISOString(), res)
         connection.connect()
       })
     }
+  }
+})
+
+app.get('/microsoftsignin', (req: RequestWithPKCE, res: any) => {
+  const cryptoProvider = new CryptoProvider();
+  cryptoProvider.generatePkceCodes().then(({ verifier, challenge }) => {
+    if (!req.session.pkceCodes) {
+      req.session.pkceCodes = {
+        challengeMethod: "S256",
+      };
+    }
+    const state = randomBytes(32).toString('hex');
+    req.session.state = state;
+
+    req.session.pkceCodes.verifier = verifier;
+    req.session.pkceCodes.challenge = challenge;
+
+    const authCodeUrlParameters: AuthorizationUrlRequest = {
+      scopes: ['https://outlook.office.com/IMAP.AccessAsUser.All'],
+      redirectUri: 'http://localhost:3000/microsoftoauth2callback',
+      codeChallenge: req.session.pkceCodes.challenge,
+      codeChallengeMethod: req.session.pkceCodes.challengeMethod,
+      state: state
+    };
+
+    microsoft_client.getAuthCodeUrl(authCodeUrlParameters).then((response) => {
+      res.redirect(response)
+    })
+  })
+
+})
+app.get('/microsoftoauth2callback', (req: Request, res: Response) => {
+  const query = req.query
+  if (req.session.state !== query.state) {
+    console.log('State Mismatch.  Possible CSRF attack. Rejecting.')
+    res.end('State Mismatch. Possible CSRF attack. Rejecting.')
+  } else {
+    const tokenRequest: AuthorizationCodeRequest = {
+      code: query.code as string,
+      scopes: ['https://outlook.office.com/IMAP.AccessAsUser.All'],
+      redirectUri: 'http://localhost:3000/microsoftoauth2callback',
+      codeVerifier: req.session.pkceCodes.verifier,
+      clientInfo: query.client_info as string
+    }
+    console.log(query)
+
+    microsoft_client.acquireTokenByCode(tokenRequest).then((token) => {
+      const accessToken = Buffer.from("user=" + token.account!.username + "\x01auth=Bearer " + token.accessToken + "\x01\x01").toString('base64');
+      const connection = get_imap_connection_ms(token.account!.username || '', accessToken)
+      let date: Date = new Date()
+      date.setDate(date.getDate() - 7);
+      sender_and_subject_since_date_callback(connection, date.toISOString(), res)
+      connection.connect()
+    })
   }
 })
 

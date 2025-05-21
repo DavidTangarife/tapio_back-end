@@ -15,9 +15,20 @@ export function get_imap_connection(email: string, xoauth2: string) {
     tls: true,
     tlsOptions: { servername: 'imap.gmail.com' }
   })
-  return imap
+  return imap;
 }
 
+export function get_imap_connection_ms(email: string, xoauth2: string) {
+  let imap: Connection = new Imap({
+    user: email,
+    xoauth2: xoauth2,
+    host: 'outlook.office365.com',
+    port: 993,
+    tls: true,
+    tlsOptions: { servername: 'outlook.office365.com' },
+  })
+  return imap;
+}
 // ===================================================================
 // This function is used to attach commands to the imap connection.
 // If you pass this a callback, it will run when you do imap.connect()

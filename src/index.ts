@@ -4,11 +4,13 @@ import url from 'url';
 import { randomBytes } from 'node:crypto';
 import { get_google_auth_client, get_google_auth_url_email } from './services/google';
 import { get_xoauth2_generator } from './services/xoauth2';
-import { get_imap_connection, get_imap_connection_ms, sender_and_subject_since_date_callback } from './services/imap';
-import { authProvider, confidentialClient } from './services/microsoft';
+import { get_imap_connection, get_imap_connection_ms, raw_emails, sender_and_subject_since_date_callback } from './services/imap';
+import { confidentialClient } from './services/microsoft';
 const session = require('express-session')
 import { Session } from 'express-session';
 import { AuthorizationCodeRequest, AuthorizationUrlRequest, ConfidentialClientApplication, CryptoProvider } from '@azure/msal-node';
+import Connection from 'node-imap';
+import { OAuth2Client } from 'googleapis-common';
 
 dotenv.config()
 
@@ -16,9 +18,9 @@ dotenv.config()
 declare module 'express-session' {
   interface SessionData {
     state: string;
-    csrfToken?: any;
-    authCodeRequest?: any;
-    pkceCodes?: any;
+    csrfToken?: string;
+    authCodeRequest?: string;
+    pkceCodes?: Record<string, string>;
     tokenCache?: any;
     idToken?: any;
     account?: any;
@@ -28,11 +30,6 @@ declare module 'express-session' {
     authCodeUrlRequest?: any;
   }
 }
-
-type Tokens = {
-  tokens: string
-}
-
 
 type RequestWithPKCE = Request & {
   session: Session & {
@@ -61,9 +58,8 @@ declare global {
 // Initialize the app
 const app: Application = express();
 const port = process.env.PORT || 3000;
-const google_client = get_google_auth_client()
-const prov = authProvider;
-const microsoft_client = confidentialClient;
+const google_client: OAuth2Client = get_google_auth_client()
+const microsoft_client: ConfidentialClientApplication = confidentialClient;
 
 // The session middleware will be used to validate requests with a state variable.
 // This variable is a 32 byte hex string and is sent to the google oauth2 server.
@@ -76,7 +72,7 @@ app.use(session({
 
 app.get('/', async function(req: Request, res: Response) {
   // This state is included in the authentication url to reduce the risk of CSRF attacks
-  const state = randomBytes(32).toString('hex');
+  const state: string = randomBytes(32).toString('hex');
   req.session.state = state;
 
   // Build the Google Auth url.
@@ -114,7 +110,7 @@ app.get('/oauth2callback', async (req: Request, res: Response) => {
           console.log(err)
         }
         console.log(token)
-        const connection = get_imap_connection(email || '', token)
+        const connection: Connection = get_imap_connection(email || '', token)
         sender_and_subject_since_date_callback(connection, date.toISOString(), res)
         connection.connect()
       })
@@ -130,7 +126,7 @@ app.get('/microsoftsignin', (req: RequestWithPKCE, res: any) => {
         challengeMethod: "S256",
       };
     }
-    const state = randomBytes(32).toString('hex');
+    const state: string = randomBytes(32).toString('hex');
     req.session.state = state;
 
     req.session.pkceCodes.verifier = verifier;
@@ -160,22 +156,23 @@ app.get('/microsoftoauth2callback', (req: Request, res: Response) => {
       code: query.code as string,
       scopes: ['https://outlook.office.com/IMAP.AccessAsUser.All'],
       redirectUri: 'http://localhost:3000/microsoftoauth2callback',
-      codeVerifier: req.session.pkceCodes.verifier,
+      codeVerifier: req.session.pkceCodes!.verifier,
       clientInfo: query.client_info as string
     }
     console.log(query)
 
     microsoft_client.acquireTokenByCode(tokenRequest).then((token) => {
-      const accessToken = Buffer.from("user=" + token.account!.username + "\x01auth=Bearer " + token.accessToken + "\x01\x01").toString('base64');
-      const connection = get_imap_connection_ms(token.account!.username || '', accessToken)
+      const accessToken: string = Buffer.from("user=" + token.account!.username + "\x01auth=Bearer " + token.accessToken + "\x01\x01").toString('base64');
+      const connection: Connection = get_imap_connection_ms(token.account!.username || '', accessToken)
       let date: Date = new Date()
       date.setDate(date.getDate() - 7);
-      sender_and_subject_since_date_callback(connection, date.toISOString(), res)
+      raw_emails(connection, date.toISOString(), res)
       connection.connect()
     })
   }
 })
 
 app.listen(port, () => {
-  console.log('Server running on https://localhost:${port}')
+  console.log(`Tapio is ready to rock your socks off on https://localhost:${port}`)
+  console.log('Hey, You, Yes you, it\s all gonna be ok! YOU GOT THIS!')
 })

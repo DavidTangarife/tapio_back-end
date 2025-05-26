@@ -1,6 +1,6 @@
 import express from "express";
 import cors from 'cors';
-import emailRoutes from "./routes/emailRoutes";
+import emailRoutes from "./routes/email.routes";
 
 const app = express();
 app.use(cors());

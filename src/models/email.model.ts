@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import { Schema, model, Document, Types, Model } from "mongoose";
 
 interface IEmail extends Document {
   projectId: Types.ObjectId;
@@ -14,12 +14,20 @@ interface IEmail extends Document {
   isTapped?: boolean;
   isDeleted?: boolean;
   isReplied?: boolean;
-  isoutgoing?: boolean;
+  isOutgoing?: boolean;
   threadId?: string;
   body: string;
   createdAt: Date;
-  // raw: {};
+  updatedAt: Date;
+  raw: {};
+  updateStatus(updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted'>>): Promise<void>;
 }
+
+// Static methods type
+interface IEmailModel extends Model<IEmail> {
+  findByProjectId: (projectId: Types.ObjectId) => Promise<IEmail | null>;
+}
+
 
 const emailSchema = new Schema<IEmail>({
   projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
@@ -35,11 +43,30 @@ const emailSchema = new Schema<IEmail>({
   isTapped: { type: Boolean, default: false },
   isDeleted: { type: Boolean, default: false },
   isReplied: { type: Boolean, default: false },
-  isoutgoing: { type: Boolean, default: false },
+  isOutgoing: { type: Boolean, default: false },
   threadId: { type: String },
   body: { type: String },
-  createdAt: { type: Date },
-  // raw: { type: String } 
+  raw: { type: String },
+}, {
+  timestamps: true
+}
+);
+
+// Instance method
+emailSchema.methods.updateStatus = async function(
+  updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted'>>
+) {
+  Object.assign(this, updates);
+  await this.save();
+}
+
+// Static method
+emailSchema.statics.findByProjectId = async function(projectId: Types.ObjectId) {
+  return this.find({ projectId })
+}
+
+emailSchema.post("save", function (doc) {
+  console.log(`Email saved: ${doc._id}`);
 });
 
-export default model<IEmail>("Email", emailSchema);
+export default model<IEmail, IEmailModel>("Email", emailSchema);

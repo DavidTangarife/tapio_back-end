@@ -166,7 +166,7 @@ app.get('/microsoftoauth2callback', (req: Request, res: Response) => {
       const connection: Connection = get_imap_connection_ms(token.account!.username || '', accessToken)
       let date: Date = new Date()
       date.setDate(date.getDate() - 7);
-      raw_emails(connection, date.toISOString(), res)
+      sender_and_subject_since_date_callback(connection, date.toISOString(), res)
       connection.connect()
     })
   }

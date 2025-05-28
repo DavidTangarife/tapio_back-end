@@ -90,7 +90,7 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
       // after the id of the most recent one.
       // ===========================================================
       imap.search(['ALL', ['SINCE', date]], function(err, results) {
-        var f = imap.fetch(results, { bodies: ['HEADER.FIELDS (FROM SUBJECT)', 'TEXT'] });
+        var f = imap.fetch(results, { bodies: ['HEADER', 'TEXT'] });
         if (err) throw err;
         f.on('message', function(msg, seqno) {
           var prefix = '(#' + seqno + ') ';
@@ -103,9 +103,6 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
               buffer += chunk.toString('utf8');
             });
             stream.once('end', function() {
-              if (info.which === 'TEXT') {
-                console.log(buffer)
-              }
               if (info.which !== 'TEXT') {
                 sender = inspect(Imap.parseHeader(buffer).from[0]);
                 subject = inspect(Imap.parseHeader(buffer).subject[0]);
@@ -125,6 +122,7 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
         });
         f.once('end', function() {
           console.log('Done fetching all messages!');
+          console.log(emails)
           page_data += '</ul>'
           imap.end();
           response.send(page_data)

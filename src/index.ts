@@ -29,7 +29,6 @@ import app from "./app";
 
 dotenv.config();
 
-const PORT = 5000;
 const MONGO_URL = process.env.MONGO_URL;
 // This use the value from the environment variable MONGO_URL, but if it’s undefined,
 // use the default string 'mongodb://mongo:27017/mydb' instead.

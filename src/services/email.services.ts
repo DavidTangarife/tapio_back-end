@@ -29,7 +29,7 @@ export async function insertEmailsInBatches(emails: any[], batchSize = 99, delay
   }
 }
 
-
+// 
 export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void> {
   if (!Array.isArray(parsedEmailArray) || parsedEmailArray.length === 0) {
     console.warn("No emails to save.");

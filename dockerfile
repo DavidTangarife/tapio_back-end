@@ -1,5 +1,5 @@
 # Build stage
-FROM node:alpine as build
+FROM node:alpine AS build
 
 WORKDIR /backend
 

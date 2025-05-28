@@ -1,0 +1,45 @@
+services:
+  ##  frontend:
+  ##  build: ./frontend
+  ##  ports:
+  ##    - "5000:80"
+  ##  depends_on:
+  ##    - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    env_file: './backend/.env'
+    ##    environment:
+    ##  - MONGO_URL=${MONGO_URL}
+    ##  - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    ##  - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    ##  - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET}
+    ##  - PORT=${PORT}
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # init-mongo:
+  #   build: ./backend
+  #   command: node mongo/init.js
+  #   depends_on:
+  #     - mongo
+
+volumes:
+  mongo_data:
+## check how to import env variable on a docker images when building from docker files
+## how to get host and domain
+## Create a repo:
+## with the Front end file docker file that clones from github repo frontendtapio
+## with the Back end file docker file that clones from github repo backendtapio
+## and the docker compose file to set up everything.
+
+## Also Check on if this would be the best aproach for deployment of an APP

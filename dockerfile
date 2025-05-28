@@ -19,7 +19,6 @@ WORKDIR /backend
 COPY --from=build /backend/package*.json ./
 COPY --from=build /backend/node_modules ./node_modules
 COPY --from=build /backend/dist ./dist
-COPY --from=build /backend/mongo ./mongo
 
 EXPOSE 5000
 

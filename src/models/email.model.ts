@@ -6,20 +6,20 @@ interface IEmail extends Document {
   mailBoxId: string;
   subject: string;
   from: string;
-  to: string[];
+  to?: string[];
   cc?: string[];
   bcc?: string[];
-  date: Date;
+  date?: Date;
   isRead?: boolean;
   isTapped?: boolean;
   isDeleted?: boolean;
   isReplied?: boolean;
   isOutgoing?: boolean;
   threadId?: string;
-  body: string;
+  body?: string;
   createdAt: Date;
   updatedAt: Date;
-  raw: {};
+  raw?: {};
   updateStatus(updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted'>>): Promise<void>;
 }
 

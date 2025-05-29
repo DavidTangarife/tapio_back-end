@@ -10,7 +10,7 @@ function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function insertEmailsInBatches(emails: any[], batchSize = 99, delayMs = 1000): Promise<void> {
+export async function insertEmailsInBatches(emails: any[], batchSize = 200, delayMs = 1000): Promise<void> {
   for (let i = 0; i < emails.length; i += batchSize) {
     const batch = emails.slice(i, i + batchSize).map(email => ({
       ...email,
@@ -19,7 +19,7 @@ export async function insertEmailsInBatches(emails: any[], batchSize = 99, delay
     }));
 
     try {
-      await Email.insertMany(batch, { ordered: false });
+      await Email.insertMany(batch);
       console.log(`Inserted batch ${i / batchSize + 1}`);
     } catch (err) {
       console.error("Error inserting batch:", err);

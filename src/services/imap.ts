@@ -1,6 +1,7 @@
 import { Response } from "express";
 import Connection from "node-imap";
 import { json } from "node:stream/consumers";
+import {saveEmailsFromIMAP} from "../services/email.services"
 
 var Imap = require('node-imap'), inspect = require('util').inspect;
 
@@ -114,7 +115,7 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
           })
           msg.once('end', function() {
             console.log(mailBoxId + 'Finished');
-            emails.push({ mailBoxId, from, subject })
+            emails.push({ mailBoxId, from, subject, projectId: "682efb5211da37c9c95e0779" })
           });
         });
         f.once('error', function(err) {
@@ -122,7 +123,7 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
         });
         f.once('end', function() {
           console.log('Done fetching all messages!');
-          console.log(emails)
+          saveEmailsFromIMAP(emails)
           page_data += '</ul>'
           imap.end();
           response.send(page_data)

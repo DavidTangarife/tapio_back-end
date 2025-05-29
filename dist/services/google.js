@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.get_google_auth_client = get_google_auth_client;
 exports.get_google_auth_url_email = get_google_auth_url_email;
@@ -45,9 +54,11 @@ function get_google_auth_url_imap(client) {
 //=========================================
 // Read the Google Auth code and get tokens.
 //=========================================
-async function get_google_auth_tokens(client, code) {
-    let { tokens } = await client.getToken(code);
-    return tokens;
+function get_google_auth_tokens(client, code) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let { tokens } = yield client.getToken(code);
+        return tokens;
+    });
 }
 ;
 //========================================
@@ -60,12 +71,14 @@ function set_credentials_on_client(client, tokens) {
 //=======================================
 // Get user email from the provided tokens.
 //=======================================
-async function get_user_email(client, id_token) {
-    const ticket = await client.verifyIdToken({
-        idToken: id_token
+function get_user_email(client, id_token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ticket = yield client.verifyIdToken({
+            idToken: id_token
+        });
+        const payload = ticket.getPayload();
+        const email = payload === null || payload === void 0 ? void 0 : payload.email;
+        return email;
     });
-    const payload = ticket.getPayload();
-    const email = payload === null || payload === void 0 ? void 0 : payload.email;
-    return email;
 }
 ;

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.get_imap_connection = get_imap_connection;
 exports.get_imap_connection_ms = get_imap_connection_ms;
+exports.raw_emails = raw_emails;
 exports.sender_and_subject_since_date_callback = sender_and_subject_since_date_callback;
 var Imap = require('node-imap'), inspect = require('util').inspect;
 // =============================================================
@@ -36,6 +37,41 @@ function get_imap_connection_ms(email, xoauth2) {
 function open_inbox(callback, imap) {
     imap.openBox('INBOX', true, callback);
 }
+function raw_emails(imap, date, response) {
+    var fs = require('fs'), fileStream;
+    imap.once('ready', function () {
+        open_inbox(function (err, box) {
+            if (err)
+                throw err;
+            imap.search(['UNSEEN', ['SINCE', 'May 20, 2025']], function (err, results) {
+                if (err)
+                    throw err;
+                var f = imap.fetch(results, { bodies: ['1.1.TEXT'] });
+                f.on('message', function (msg, seqno) {
+                    console.log('Message #%d', seqno);
+                    var prefix = '(#' + seqno + ') ';
+                    msg.on('body', function (stream, info) {
+                        console.log(prefix + 'Body');
+                        stream.pipe(fs.createWriteStream('msg-' + seqno + '-body.txt'));
+                    });
+                    msg.once('attributes', function (attrs) {
+                        console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
+                    });
+                    msg.once('end', function () {
+                        console.log(prefix + 'Finished');
+                    });
+                });
+                f.once('error', function (err) {
+                    console.log('Fetch error: ' + err);
+                });
+                f.once('end', function () {
+                    console.log('Done fetching all messages!');
+                    imap.end();
+                });
+            });
+        }, imap);
+    });
+}
 // ===================================================================
 // This is a sample of a callback to get the sender and subject of the
 // most recent email.
@@ -56,7 +92,7 @@ function sender_and_subject_since_date_callback(imap, date, response) {
             // after the id of the most recent one.
             // ===========================================================
             imap.search(['ALL', ['SINCE', date]], function (err, results) {
-                var f = imap.fetch(results, { bodies: ['HEADER.FIELDS (FROM SUBJECT)'] });
+                var f = imap.fetch(results, { bodies: ['HEADER', 'TEXT'] });
                 if (err)
                     throw err;
                 f.on('message', function (msg, seqno) {
@@ -89,6 +125,7 @@ function sender_and_subject_since_date_callback(imap, date, response) {
                 });
                 f.once('end', function () {
                     console.log('Done fetching all messages!');
+                    console.log(emails);
                     page_data += '</ul>';
                     imap.end();
                     response.send(page_data);

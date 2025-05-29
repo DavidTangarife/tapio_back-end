@@ -1,46 +1,21 @@
 // import Email from "../models/email.model";
 // import Project from "../models/project.model";
 // import {Request, Response} from 'express';
-
+// import {saveEmailsFromIMAP} from "../services/email.services"
 
 // export const saveEmail = async (req: Request, res: Response) => {
-//   const { projectId, mailBoxId,
+//   const { mailBoxId,
 //       subject,
-//       from,
-//       to,
-//       cc,
-//       bcc,
-//       date,
-//       isRead,
-//       isTapped,
-//       isDeleted,
-//       isReplied,
-//       outgoing,
-//       threadId,
-//       body} = req.body;
+//       from
+//       } = req.body;
 
 //   try{
-//     const projectExists = await Project.findById(projectId);
-//     if (!projectExists) {
-//       return res.status(404).json({ error: "Project not found" });
-//     }
+
 //     const newEmail = new Email({
-//       projectId,
+//       projectId: "682efb5211da37c9c95e0779",
 //       mailBoxId,
 //       subject,
-//       from,
-//       to,
-//       cc,
-//       bcc,
-//       date,
-//       isRead,
-//       isTapped,
-//       isDeleted,
-//       isReplied,
-//       outgoing,
-//       threadId,
-//       body,
-//       createdAt: new Date()
+//       from
 //     });
 
 //     const savedEmail = await newEmail.save();

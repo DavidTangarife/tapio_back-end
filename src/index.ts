@@ -140,7 +140,7 @@ app.get("/oauth2callback", async (req: Request, res: Response) => {
         tokens.access_token || ""
       );
       let date: Date = new Date();
-      date.setDate(date.getDate() - 7);
+      date.setDate(date.getDate() - 14);
       console.log(date);
       generator.getToken((err: string, token: string) => {
         if (err) {

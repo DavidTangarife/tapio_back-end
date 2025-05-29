@@ -26,6 +26,7 @@ import Connection from "node-imap";
 import { OAuth2Client } from "googleapis-common";
 import mongoose from "mongoose";
 import app from "./app";
+import { getEmailsByProject } from "./services/email.services";
 
 dotenv.config();
 
@@ -224,6 +225,12 @@ app.get("/microsoftoauth2callback", (req: Request, res: Response) => {
     });
   }
 });
+
+app.get("/getemails", async (req: Request, res: Response) => {
+  console.log("Here I AM!")
+  const emails: any = await getEmailsByProject("682efb5211da37c9c95e0779");
+    res.send(emails)
+})
 
 mongoose.connect(MONGO_URL).then(() => {
   console.log("MongoDB connected");

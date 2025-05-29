@@ -93,8 +93,8 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
         var f = imap.fetch(results, { bodies: ['HEADER', 'TEXT'] });
         if (err) throw err;
         f.on('message', function(msg, seqno) {
-          var prefix = '(#' + seqno + ') ';
-          let sender = ''
+          var mailBoxId = seqno;
+          let from = ''
           let subject = ''
           msg.on('body', function(stream, info) {
             var buffer = '', count = 0;
@@ -104,17 +104,17 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
             });
             stream.once('end', function() {
               if (info.which !== 'TEXT') {
-                sender = inspect(Imap.parseHeader(buffer).from[0]);
+                from = inspect(Imap.parseHeader(buffer).from[0]);
                 subject = inspect(Imap.parseHeader(buffer).subject[0]);
-                page_data += '<li>Sender: ' + sender + '\n' + 'Subject: ' + subject + '</li>'
+                page_data += '<li>Sender: ' + from + '\n' + 'Subject: ' + subject + '</li>'
               }
             });
           });
           msg.once('attributes', function(attrs) {
           })
           msg.once('end', function() {
-            console.log(prefix + 'Finished');
-            emails.push({ prefix, sender, subject })
+            console.log(mailBoxId + 'Finished');
+            emails.push({ mailBoxId, from, subject })
           });
         });
         f.once('error', function(err) {

@@ -23,6 +23,7 @@ const session = require("express-session");
 const msal_node_1 = require("@azure/msal-node");
 const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
+const email_services_1 = require("./services/email.services");
 dotenv_1.default.config();
 const MONGO_URL = process.env.MONGO_URL;
 // This use the value from the environment variable MONGO_URL, but if it’s undefined,
@@ -50,6 +51,7 @@ app_1.default.get("/", function (req, res) {
         // This state is included in the authentication url to reduce the risk of CSRF attacks
         const state = (0, node_crypto_1.randomBytes)(32).toString("hex");
         req.session.state = state;
+        console.log('please');
         // Build the Google Auth url.
         const url = (0, google_1.get_google_auth_url_email)(google_client, state);
         res.send(`Welcome to Tapio, <br><a href=${url}>Connect to google?</a><br><a href='/microsoftsignin'>Connect to Microsoft</a>`);
@@ -79,7 +81,7 @@ app_1.default.get("/oauth2callback", (req, res) => __awaiter(void 0, void 0, voi
             const { email } = yield google_client.getTokenInfo(((_a = tokens.access_token) === null || _a === void 0 ? void 0 : _a.toString()) || "");
             const generator = (0, xoauth2_1.get_xoauth2_generator)(email || "", tokens.refresh_token || "", tokens.access_token || "");
             let date = new Date();
-            date.setDate(date.getDate() - 7);
+            date.setDate(date.getDate() - 14);
             console.log(date);
             generator.getToken((err, token) => {
                 if (err) {
@@ -131,7 +133,6 @@ app_1.default.get("/microsoftoauth2callback", (req, res) => {
             codeVerifier: req.session.pkceCodes.verifier,
             clientInfo: query.client_info,
         };
-        console.log(query);
         microsoft_client.acquireTokenByCode(tokenRequest).then((token) => {
             const accessToken = Buffer.from("user=" +
                 token.account.username +
@@ -146,6 +147,10 @@ app_1.default.get("/microsoftoauth2callback", (req, res) => {
         });
     }
 });
+app_1.default.get("/getemails", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const emails = yield (0, email_services_1.getEmailsByProject)("682efb5211da37c9c95e0779");
+    res.send(emails);
+}));
 mongoose_1.default.connect(MONGO_URL).then(() => {
     console.log("MongoDB connected");
     app_1.default.listen(port, () => {

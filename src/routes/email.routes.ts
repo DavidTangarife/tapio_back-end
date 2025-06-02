@@ -1,8 +1,8 @@
-// import express from "express";
-// import { saveEmail } from "../controllers/email.controller";
+import express from "express";
+import { getEmailByProjectId } from "../controllers/email.controller";
 
-// const router = express.Router();
+const router = express.Router();
 
-// router.post("/inbox", saveEmail);
+router.get("/getemails", getEmailByProjectId);
 
-// export default router;
+export default router;

@@ -3,6 +3,7 @@ import cors from "cors";
 import projectRoutes from "./routes/project.routes";
 import errorHandler from "./middleware/error-handler";
 import googleRouter from "./routes/google.routes";
+import microsoftRouter from "./routes/microsoft.routes";
 const session = require("express-session");
 
 export default function createApp(): Application {
@@ -21,6 +22,7 @@ export default function createApp(): Application {
   );
   app.use("/api", projectRoutes);
   app.use("/api", googleRouter)
+  app.use("/api", microsoftRouter)
   app.use(errorHandler)
   return app;
 }

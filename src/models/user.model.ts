@@ -4,6 +4,7 @@ export interface IUser extends Document {
   fullName?: string;
   email: string;
   refresh_token?: string;
+  token_cache?: string
   createdAt: Date;
   updatedAt: Date;
 
@@ -24,6 +25,9 @@ const userSchema = new Schema<IUser>({
   refresh_token: {
     type: String,
   },
+  token_cache: {
+    type: String,
+  }
 }, {
   timestamps: true
 }

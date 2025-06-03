@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { get_google_auth_client, get_google_auth_url_email, processGoogleCode } from "../services/google";
-import url from "url"
+import { parse } from "url"
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
 import { findOrCreateUserFromGoogle } from "../services/user.services";
@@ -19,12 +19,11 @@ export const loginWithGoogle = (req: Request, res: Response, next: NextFunction)
 }
 
 export const handleGoogleRedirect = async (req: Request, res: Response, next: NextFunction) => {
-  const query = url.parse(req.url || "", true).query;
+  const query = parse(req.url || "", true).query;
 
   if (query.error) next(query.error);
   checkState(req, String(query.state));
   const result = await processGoogleCode(String(query.code), google_client)
-  console.log(result)
   const userData: GoogleUserData = { email: result.email!, refresh_token: result.refresh_token! }
   const user = await findOrCreateUserFromGoogle(userData)
   req.session.user_id = user[0]._id

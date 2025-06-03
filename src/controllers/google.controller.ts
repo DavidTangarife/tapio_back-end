@@ -3,8 +3,14 @@ import { get_google_auth_client, get_google_auth_url_email, processGoogleCode } 
 import url from "url"
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
+import { findOrCreateUserFromGoogle } from "../services/user.services";
 
 const google_client: OAuth2Client = get_google_auth_client('http://localhost:3000/api/google-redirect')
+
+interface GoogleUserData {
+  email: string;
+  refresh_token: string;
+}
 
 export const loginWithGoogle = (req: Request, res: Response, next: NextFunction) => {
   const url = get_google_auth_url_email(google_client, setState(req))
@@ -18,5 +24,9 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   if (query.error) next(query.error);
   checkState(req, String(query.state));
   const result = await processGoogleCode(String(query.code), google_client)
-  res.json(result);
+  console.log(result)
+  const userData: GoogleUserData = { email: result.email!, refresh_token: result.refresh_token! }
+  const user = await findOrCreateUserFromGoogle(userData)
+  req.session.user_id = user[0]._id
+  res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
 }

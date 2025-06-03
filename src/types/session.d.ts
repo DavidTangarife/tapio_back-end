@@ -14,6 +14,7 @@ declare module "express-session" {
     refresh?: any;
     isAuthenticated?: boolean;
     authCodeUrlRequest?: any;
+    user_id?: ObjectId;
   }
 }
 

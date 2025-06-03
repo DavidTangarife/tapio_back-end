@@ -1,15 +1,20 @@
 import { google, Auth } from 'googleapis';
+import { OAuth2Client } from 'googleapis-common';
+import { get_xoauth2_generator } from './xoauth2';
+import { access } from 'node:fs';
+import { get_imap_connection } from './imap';
+import Connection from 'node-imap';
 
 //========================================
 // Get a new Google Auth Client with required credentials
 // GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET need to be set
 // in environment varables.
 //========================================
-export function get_google_auth_client() {
+export function get_google_auth_client(url: string = 'http://localhost:3000/oauth2callback') {
   const oauth2Client: Auth.OAuth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'http://localhost:3000/oauth2callback'
+    url
   );
   return oauth2Client;
 };
@@ -66,3 +71,10 @@ export async function get_user_email(client: Auth.OAuth2Client, id_token: string
   const email = payload?.email
   return email;
 };
+
+export async function processGoogleCode(code: string, client: OAuth2Client) {
+  if (code === 'undefined') throw new Error('No Google Auth Code found!')
+  const { tokens } = await client.getToken(code.replace("%F", "/"))
+  const { email } = await client.getTokenInfo(tokens.access_token?.toString() || "")
+  return { ...tokens, email }
+}

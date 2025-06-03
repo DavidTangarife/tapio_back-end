@@ -5,6 +5,7 @@ import {
   CryptoProvider,
   AuthorizationUrlRequest,
   AuthorizationCodeRequest,
+  SilentFlowRequest,
 } from "@azure/msal-node"
 import "dotenv"
 import { RequestWithSession } from "../types/session";
@@ -81,8 +82,46 @@ export const getTokenRequest = (req: RequestWithSession, query: any) => {
   return tokenRequest
 }
 
+//================================================
+// Silently refresh the Microsoft Access Token if
+// possible.
+//================================================
+
+export const silentlyRefreshToken = async (token_cache: string) => {
+  const client = getNewMicrosoftClient()
+  client.getTokenCache().deserialize(token_cache)
+  const accounts = await client.getTokenCache().getAllAccounts()
+
+  const tokenRequest: SilentFlowRequest = {
+    account: accounts[0],
+    scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"]
+  }
+  await client.acquireTokenSilent(tokenRequest).then((response) => {
+    return client
+  }).catch((error) => {
+    throw new Error(error)
+  })
+}
+
 export const getNewMicrosoftClient = (): ConfidentialClientApplication => {
   return new ConfidentialClientApplication(config)
 }
 
 export const confidentialClient = new ConfidentialClientApplication(config)
+
+//=====================================================
+// Builds an XOAUTH2 token. This is only required if
+// accessing IMAP or SMTP server.  API calls shouldn't
+// require it.
+//=====================================================
+
+export const buildXOAuth2Token = (username: string, accessToken: string) => {
+  const token: string = Buffer.from(
+    "user=" +
+    username +
+    "\x01auth=Bearer " +
+    accessToken +
+    "\x01\x01"
+  ).toString("base64");
+  return token
+}

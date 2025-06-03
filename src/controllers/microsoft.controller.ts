@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { parse } from "url"
 import { setState, checkState } from "../services/state";
-import { findOrCreateUserFromGoogle, findOrCreateUserFromMicrosoft } from "../services/user.services";
+import { findOrCreateUserFromMicrosoft } from "../services/user.services";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { buildPkceCodes, confidentialClient, getAuthCodeParams, getNewMicrosoftClient, getTokenRequest } from "../services/microsoft";
 

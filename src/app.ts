@@ -1,4 +1,4 @@
-import express, { Application, NextFunction, Request, Response } from "express"
+import express, { Application } from "express"
 import cors from "cors";
 import projectRoutes from "./routes/project.routes";
 import errorHandler from "./middleware/error-handler";
@@ -10,8 +10,14 @@ export default function createApp(): Application {
   const app: Application = express();
   app.use(cors());
   app.use(express.json());
-  // The session middleware will be used to validate requests with a state variable.
-  // This variable is a 32 byte hex string and is sent to the google oauth2 server.
+
+  //======================================================
+  // The session middleware will be used to validate 
+  // requests with a state variable.
+  //
+  // This variable is a 32 byte hex string and is 
+  // sent to the oauth2 server.
+  //======================================================
   app.use(
     session({
       // TODO: Implement a real session secret.
@@ -20,9 +26,22 @@ export default function createApp(): Application {
       saveUninitialized: false,
     })
   );
+
+
+  //=======================
+  //        ROUTES
+  //=======================
   app.use("/api", projectRoutes);
   app.use("/api", googleRouter)
   app.use("/api", microsoftRouter)
+
+  //===================================================
+  // Error Handling Middleware
+  //
+  // WARN: Please place all other app.use() above this.
+  // Error middleware needs to be last in the chain.
+  //
+  //===================================================
   app.use(errorHandler)
   return app;
 }

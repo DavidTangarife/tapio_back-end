@@ -26,13 +26,13 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 function insertEmailsInBatches(emails_1) {
-    return __awaiter(this, arguments, void 0, function* (emails, batchSize = 99, delayMs = 1000) {
+    return __awaiter(this, arguments, void 0, function* (emails, batchSize = 200, delayMs = 1000) {
         for (let i = 0; i < emails.length; i += batchSize) {
             const batch = emails.slice(i, i + batchSize).map(email => (Object.assign(Object.assign({}, email), { 
                 //   to: email.to?.length ? email.to : [userEmail], 
                 createdAt: new Date() })));
             try {
-                yield email_model_1.default.insertMany(batch, { ordered: false });
+                yield email_model_1.default.insertMany(batch);
                 console.log(`Inserted batch ${i / batchSize + 1}`);
             }
             catch (err) {

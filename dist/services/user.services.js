@@ -19,19 +19,20 @@ const user_model_1 = __importDefault(require("../models/user.model"));
 /* Create user or return existing one */
 function findOrCreateUserFromGoogle(googleUserData) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { email, refreshToken } = googleUserData;
+        const { email, refresh_token } = googleUserData;
         let user = yield user_model_1.default.findOne({ email });
         if (!user) {
-            user = yield user_model_1.default.create({ email, refreshToken });
+            user = yield user_model_1.default.create({ email, refresh_token });
+            return [user, 'new'];
         }
         else {
             // update refresh token if changed
-            if (user.refreshToken !== refreshToken) {
-                user.refreshToken = refreshToken;
+            if (user.refresh_token !== refresh_token) {
+                user.refresh_token = refresh_token;
                 yield user.save();
             }
         }
-        return user;
+        return [user, 'existing'];
     });
 }
 ;

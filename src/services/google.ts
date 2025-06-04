@@ -1,10 +1,11 @@
-import { google, Auth } from 'googleapis';
+import axios from 'axios';
+import { google, Auth, batch_v1 } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
-import { get_xoauth2_generator } from './xoauth2';
-import { access } from 'node:fs';
-import { get_imap_connection } from './imap';
-import Connection from 'node-imap';
+import { request } from 'node:https';
 
+google.options({
+  http2: true
+})
 //========================================
 // Get a new Google Auth Client with required credentials
 // GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET need to be set
@@ -78,3 +79,34 @@ export async function processGoogleCode(code: string, client: OAuth2Client) {
   const { email } = await client.getTokenInfo(tokens.access_token?.toString() || "")
   return { ...tokens, email }
 }
+
+export const getGmailApi = async (refresh_token: string, access_token: string) => {
+  const auth_client = get_google_auth_client();
+  auth_client.setCredentials({ refresh_token: refresh_token })
+  const gmail = google.gmail({ version: 'v1', auth: auth_client });
+  const emails = await gmail.users.messages.list({ userId: 'me' })
+  const payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
+  console.time('timer');
+  const response = await batchGetEmails(payload.slice(0, 3), access_token)
+  console.log(response)
+  console.timeEnd('timer');
+}
+
+const batchGetEmails = async (ids: any, access_token: string) => {
+  const data: string[] = ids.map((x: any) => {
+    return `--batch_foobarbaz\r\nContent-Type: application/http\r\nContent-ID: ${x}\r\n\r\nGET https://gmail.googleapis.com/gmail/v1/users/me/messages/${x} HTTP/1.1\r\n\r\n`
+  })
+  const streq: string = data.join('') + '--batch_foobarbaz--'
+  const result = axios.post(
+    'https://www.googleapis.com/batch/gmail/v1',
+    streq,
+    {
+      headers: {
+        'Content-Type': 'multipart/mixed; boundary=batch_foobarbaz',
+        'Authorization': 'Bearer ' + access_token,
+      }
+    }
+  )
+  return result
+}
+

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { get_google_auth_client, get_google_auth_url_email, processGoogleCode } from "../services/google";
+import { get_google_auth_client, get_google_auth_url_email, getGmailApi, processGoogleCode } from "../services/google";
 import { parse } from "url"
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
@@ -26,6 +26,8 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   const result = await processGoogleCode(String(query.code), google_client)
   const userData: GoogleUserData = { email: result.email!, refresh_token: result.refresh_token! }
   const user = await findOrCreateUserFromGoogle(userData)
+
   req.session.user_id = user[0]._id
+  await getGmailApi(userData.refresh_token, result.access_token!)
   res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
 }

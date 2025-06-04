@@ -19,11 +19,10 @@ const google_1 = require("./services/google");
 const xoauth2_1 = require("./services/xoauth2");
 const imap_1 = require("./services/imap");
 const microsoft_1 = require("./services/microsoft");
-const session = require("express-session");
 const msal_node_1 = require("@azure/msal-node");
 const mongoose_1 = __importDefault(require("mongoose"));
-const app_1 = __importDefault(require("./app"));
 const email_services_1 = require("./services/email.services");
+const app_1 = __importDefault(require("./app"));
 dotenv_1.default.config();
 const MONGO_URL = process.env.MONGO_URL;
 // This use the value from the environment variable MONGO_URL, but if it’s undefined,
@@ -34,31 +33,22 @@ if (!MONGO_URL) {
     throw new Error("Environment variable MONGO_URL must be defined!");
 }
 // Initialize the app
-// const app: Application = express();
+const app = (0, app_1.default)();
 const port = process.env.PORT || 3000;
 const google_client = (0, google_1.get_google_auth_client)();
 const microsoft_client = microsoft_1.confidentialClient;
-// The session middleware will be used to validate requests with a state variable.
-// This variable is a 32 byte hex string and is sent to the google oauth2 server.
-app_1.default.use(session({
-    // TODO: Implement a real session secret.
-    secret: "testsecret",
-    resave: false,
-    saveUninitialized: false,
-}));
-app_1.default.get("/", function (req, res) {
+app.get("/", function (req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         // This state is included in the authentication url to reduce the risk of CSRF attacks
         const state = (0, node_crypto_1.randomBytes)(32).toString("hex");
         req.session.state = state;
-        console.log('please');
         // Build the Google Auth url.
         const url = (0, google_1.get_google_auth_url_email)(google_client, state);
         res.send(`Welcome to Tapio, <br><a href=${url}>Connect to google?</a><br><a href='/microsoftsignin'>Connect to Microsoft</a>`);
     });
 });
 // oauth2 callback uri for processing the users email from google oAuth2
-app_1.default.get("/oauth2callback", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/oauth2callback", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const q = url_1.default.parse(req.url || "", true).query;
     if (q.error) {
@@ -95,7 +85,35 @@ app_1.default.get("/oauth2callback", (req, res) => __awaiter(void 0, void 0, voi
         }
     }
 }));
-app_1.default.get("/microsoftsignin", (req, res) => {
+app.get('/microtest', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    microsoft_client.getTokenCache().deserialize(JSON.stringify('** Token Cache here **'));
+    const acc = yield microsoft_client.getTokenCache().getAllAccounts();
+    console.log("Account");
+    console.log(acc);
+    const tokenRequest = {
+        account: acc[0],
+        scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"]
+    };
+    microsoft_client.acquireTokenSilent(tokenRequest).then((response) => {
+        console.log('Response');
+        console.log(response);
+        const accessToken = Buffer.from("user=" +
+            response.account.username +
+            "\x01auth=Bearer " +
+            response.accessToken +
+            "\x01\x01").toString("base64");
+        const connection = (0, imap_1.get_imap_connection_ms)(response.account.username || "", accessToken);
+        console.log(connection);
+        let date = new Date();
+        date.setDate(date.getDate() - 7);
+        (0, imap_1.sender_and_subject_since_date_callback)(connection, date.toISOString(), res);
+        connection.connect();
+    }).catch((error) => {
+        console.log('Error');
+        console.log(error);
+    });
+}));
+app.get("/microsoftsignin", (req, res) => {
     const cryptoProvider = new msal_node_1.CryptoProvider();
     cryptoProvider.generatePkceCodes().then(({ verifier, challenge }) => {
         if (!req.session.pkceCodes) {
@@ -119,7 +137,7 @@ app_1.default.get("/microsoftsignin", (req, res) => {
         });
     });
 });
-app_1.default.get("/microsoftoauth2callback", (req, res) => {
+app.get("/microsoftoauth2callback", (req, res) => {
     const query = req.query;
     if (req.session.state !== query.state) {
         console.log("State Mismatch.  Possible CSRF attack. Rejecting.");
@@ -134,11 +152,14 @@ app_1.default.get("/microsoftoauth2callback", (req, res) => {
             clientInfo: query.client_info,
         };
         microsoft_client.acquireTokenByCode(tokenRequest).then((token) => {
+            console.log(token);
             const accessToken = Buffer.from("user=" +
                 token.account.username +
                 "\x01auth=Bearer " +
                 token.accessToken +
                 "\x01\x01").toString("base64");
+            const cache = microsoft_client.getTokenCache().serialize();
+            console.log(cache);
             const connection = (0, imap_1.get_imap_connection_ms)(token.account.username || "", accessToken);
             let date = new Date();
             date.setDate(date.getDate() - 7);
@@ -147,13 +168,13 @@ app_1.default.get("/microsoftoauth2callback", (req, res) => {
         });
     }
 });
-app_1.default.get("/getemails", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get("/getemails", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const emails = yield (0, email_services_1.getEmailsByProject)("682efb5211da37c9c95e0779");
     res.send(emails);
 }));
 mongoose_1.default.connect(MONGO_URL).then(() => {
     console.log("MongoDB connected");
-    app_1.default.listen(port, () => {
+    app.listen(port, () => {
         console.log(`Tapio is ready to rock your socks off on https://localhost:${port}`);
         console.log("Hey, You, Yes you, its all gonna be ok! YOU GOT THIS!");
     });

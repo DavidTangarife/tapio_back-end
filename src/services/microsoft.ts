@@ -7,7 +7,6 @@ import {
   AuthorizationCodeRequest,
   SilentFlowRequest,
 } from "@azure/msal-node"
-import "dotenv"
 import { RequestWithSession } from "../types/session";
 
 const cryptoProvider = new CryptoProvider();
@@ -96,11 +95,11 @@ export const silentlyRefreshToken = async (token_cache: string) => {
     account: accounts[0],
     scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"]
   }
-  await client.acquireTokenSilent(tokenRequest).then((response) => {
-    return client
+  await client.acquireTokenSilent(tokenRequest).then(() => {
   }).catch((error) => {
     throw new Error(error)
   })
+  return client
 }
 
 export const getNewMicrosoftClient = (): ConfidentialClientApplication => {

@@ -3,7 +3,7 @@ import mongoose, { Schema, model, Document, Model } from "mongoose";
 export interface IUser extends Document {
   fullName?: string;
   email: string;
-  refreshToken: string;
+  refresh_token?: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -11,23 +11,22 @@ export interface IUser extends Document {
 }
 
 const userSchema = new Schema<IUser>({
-  fullName: { 
+  fullName: {
     type: String,
     minlength: [3, 'Full name must be at least 3 characters long'],
     trim: true,
   },
-  email: { 
+  email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
+    unique: [true, 'Email must be unique']
   },
-  refreshToken: {
+  refresh_token: {
     type: String,
-    required: [true, 'Refresh token is required']
   },
 }, {
-    timestamps: true
-  }
+  timestamps: true
+}
 );
 
 // Instance method
@@ -38,7 +37,7 @@ userSchema.methods.updateFullName = async function(newName: string) {
 };
 
 // Show a message before saving
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function(next) {
   if (this.isNew) {
     console.log("Creating new user...");
   }
@@ -46,7 +45,7 @@ userSchema.pre("save", function (next) {
 });
 
 // Show a message after saving
-userSchema.post("save", function (doc) {
+userSchema.post("save", function(doc) {
   console.log(`User saved: ${doc._id}`);
 });
 

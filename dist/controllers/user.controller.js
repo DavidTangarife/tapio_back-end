@@ -9,24 +9,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createProjectController = void 0;
-const project_services_1 = require("../services/project.services");
+exports.handleUpdateUserName = void 0;
+const user_services_1 = require("../services/user.services");
 const bson_1 = require("bson");
-const createProjectController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, name, startDate, filters } = req.body;
+const handleUpdateUserName = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId, fullName } = req.body;
     // console.log("Request body:", req.body);
+    if (!fullName) {
+        return res.status(400).json({ error: "Full name is required." });
+    }
     try {
-        const project = yield (0, project_services_1.createProject)({
-            userId: new bson_1.ObjectId(String(userId)),
-            name,
-            startDate: new Date(startDate),
-            filters
-        });
+        const updateUser = yield (0, user_services_1.updateUserFullName)(new bson_1.ObjectId(String(userId)), fullName);
         // console.log("Request body:", req.body);
-        res.status(201).json(project);
+        res.status(200).json(updateUser);
     }
     catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
-exports.createProjectController = createProjectController;
+exports.handleUpdateUserName = handleUpdateUserName;

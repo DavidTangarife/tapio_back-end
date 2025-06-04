@@ -20,8 +20,16 @@ const mongoose_1 = require("mongoose");
 /* Create and return a new project */
 function createProject(data) {
     return __awaiter(this, void 0, void 0, function* () {
-        const project = yield project_model_1.default.create(data);
-        return project;
+        console.log("Inside createProject service, data:", data);
+        try {
+            const project = yield project_model_1.default.create(data);
+            console.log("Project created successfully:", project);
+            return project;
+        }
+        catch (error) {
+            console.error("Error in createProject:", error);
+            throw error;
+        }
     });
 }
 /* Get projects belongs to a user by user's id */

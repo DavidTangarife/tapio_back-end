@@ -28,6 +28,7 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   const user = await findOrCreateUserFromGoogle(userData)
 
   req.session.user_id = user[0]._id
+  req.session.save();
   await getGmailApi(userData.refresh_token, result.access_token!)
   res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
 }

@@ -33,7 +33,9 @@ const handleGoogleRedirect = (req, res, next) => __awaiter(void 0, void 0, void 
     console.log(result);
     const userData = { email: result.email, refresh_token: result.refresh_token };
     const user = yield (0, user_services_1.findOrCreateUserFromGoogle)(userData);
-    req.session.user_id = user[0]._id;
+    console.log(user);
+    req.session.user_id = user[0]._id.toString();
+    console.log(req.session.user_id);
     res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1]);
 });
 exports.handleGoogleRedirect = handleGoogleRedirect;

@@ -66,6 +66,7 @@ projectSchema.pre("validate", function (next) {
             return next(new Error("Start date cannot be more than 30 days ago."));
         }
     }
+    next();
 });
 /* validate userId exists */
 projectSchema.pre("validate", function (next) {

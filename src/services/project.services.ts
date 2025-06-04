@@ -2,15 +2,22 @@ import Project, {IProject} from "../models/project.model"
 import { Types } from "mongoose";
 
 interface CreateProjectInput {
-  userId: string;
+  userId: Types.ObjectId;
   name: string;
-  startDate: string;
+  startDate: Date;
   filters?: any
 }
 /* Create and return a new project */
 export async function createProject(data: CreateProjectInput): Promise<IProject> {
-  const project = await Project.create(data);
-  return project;
+ console.log("Inside createProject service, data:", data);
+  try {
+    const project = await Project.create(data);
+    console.log("Project created successfully:", project);
+    return project;
+  } catch (error) {
+    console.error("Error in createProject:", error);
+    throw error;
+  }
 }
 
 /* Get projects belongs to a user by user's id */

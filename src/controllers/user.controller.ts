@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import { updateUserFullName } from '../services/user.services';
+import { findOrCreateUserFromGoogle, updateUserFullName } from '../services/user.services';
 import { ObjectId } from 'bson';
 
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
@@ -20,3 +20,20 @@ export const handleUpdateUserName = async (req: Request, res: Response) :Promise
     res.status(500).json({ error: err.message });
   }
 };
+
+
+export async function handleGoogleAuth(req: Request, res: Response) :Promise<any> {
+  try {
+    const { email, refreshToken } = req.body;
+
+    if (!email || !refreshToken) {
+      return res.status(400).json({ message: "Missing email or refreshToken" });
+    }
+
+    const user = await findOrCreateUserFromGoogle({ email, refreshToken });
+
+    res.status(200).json({ message: "User signed in via Google", user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}

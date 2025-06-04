@@ -1,8 +1,8 @@
 import Email from "../models/email.model";
 import Project from "../models/project.model";
 import {Request, Response} from 'express';
-import {saveEmailsFromIMAP} from "../services/email.services"
-import { getEmailsByProject } from "../services/email.services";
+import {getFilteredEmails, saveEmailsFromIMAP} from "../services/email.services"
+// import { getEmailsByProject } from "../services/email.services";
 
 // export const saveEmail = async (req: Request, res: Response) => {
 //   const { mailBoxId,
@@ -27,12 +27,28 @@ import { getEmailsByProject } from "../services/email.services";
 //   }
 // };
 
-export const getEmailByProjectId = async (req: Request, res: Response) => {
+// export const getEmailByProjectId = async (req: Request, res: Response) => {
+//   try {
+//     const emails: any = await getEmailsByProject("682efb5211da37c9c95e0779");
+//     res.status(200).json(emails);
+//   } catch (err) {
+//     console.error("Failed to fetch emails:", err);
+//     res.status(500).json({ message: "Server error while fetching emails" });
+//   }
+// }
+
+
+export const fetchFilteredEmails = async (req: Request, res: Response) => {
   try {
-    const emails: any = await getEmailsByProject("682efb5211da37c9c95e0779");
+    const { projectId } = req.params;
+
+    const emails = await getFilteredEmails(projectId);
+
+    
+
     res.status(200).json(emails);
-  } catch (err) {
-    console.error("Failed to fetch emails:", err);
-    res.status(500).json({ message: "Server error while fetching emails" });
+  } catch (err: any) {
+    console.error("Failed to get filtered emails:", err.message);
+    res.status(500).json({ error: "Failed to get emails." });
   }
-}
+};

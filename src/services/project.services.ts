@@ -38,6 +38,7 @@ export async function updateProject(
     name?: string;
     startDate?: Date;
     filters?: { keywords: string[]; senders: string[] };
+    blockedFilters?: { keywords: string[]; senders: string[] };
   }
 ) {
   const project = await Project.findById(projectId);
@@ -46,6 +47,22 @@ export async function updateProject(
   if (updates.name !== undefined) project.name = updates.name;
   if (updates.startDate !== undefined) project.startDate = updates.startDate;
   if (updates.filters !== undefined) project.filters = updates.filters;
+  if (updates.blockedFilters !== undefined) project.blockedFilters = updates.blockedFilters;
 
   return await project.save();
+}
+
+
+/**
+ * Updates the lastLogin field of a project by ID.
+ * @param projectId The ID of the project to update.
+ * @returns The updated project document.
+ */
+export async function updateLastLogin(projectId: string) {
+  const project = await Project.findByIdAndUpdate(
+    projectId,
+    { lastLogin: new Date() },
+    { new: true }
+  );
+  return project;
 }

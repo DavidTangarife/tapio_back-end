@@ -10,6 +10,11 @@ export interface IProject extends Document {
     keywords: string[];
     senders: string[];
   };
+  blockedFilters?: {
+  keywords: string[];
+  senders: string[];
+};
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
   // Instance method
@@ -22,16 +27,21 @@ interface IProjectModel extends Model<IProject> {
 }
 
 const projectSchema = new Schema<IProject>({
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true, unique: true },
-    startDate: { type: Date, required: true },
-    filters: {
-      keywords: [{ type: String }],
-      senders: [{ type: String }]
-    },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true, unique: true },
+  startDate: { type: Date, required: true },
+  filters: {
+    keywords: [{ type: String }],
+    senders: [{ type: String }]
+  },
+  blockedFilters: {
+    keywords: [{ type: String }],
+    senders: [{ type: String }]
+  },
+  lastLogin: { type: Date, default: new Date() }
 }, {
-        timestamps: true
-    }
+    timestamps: true
+  }
 );
 
 // Instance method

@@ -24,9 +24,10 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   if (query.error) next(query.error);
   checkState(req, String(query.state));
   const result = await processGoogleCode(String(query.code), google_client)
-  console.log(result)
+ 
   const userData: GoogleUserData = { email: result.email!, refresh_token: result.refresh_token! }
   const user = await findOrCreateUserFromGoogle(userData)
   req.session.user_id = user[0]._id
+  req.session.save();
   res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
 }

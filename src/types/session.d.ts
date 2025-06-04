@@ -31,3 +31,5 @@ type RequestWithPKCE = Request & {
 type RequestWithSession = Request & {
   session?: SessionData
 }
+
+declare module "connect-mongodb-session";

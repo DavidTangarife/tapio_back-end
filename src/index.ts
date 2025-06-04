@@ -123,6 +123,7 @@ app.get("/oauth2callback", async (req: Request, res: Response) => {
       const { email } = await google_client.getTokenInfo(
         tokens.access_token?.toString() || ""
       );
+
       const generator = get_xoauth2_generator(
         email || "",
         tokens.refresh_token || "",

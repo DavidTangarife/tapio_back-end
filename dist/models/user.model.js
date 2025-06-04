@@ -19,11 +19,10 @@ const userSchema = new mongoose_1.Schema({
     email: {
         type: String,
         required: [true, 'Email is required'],
-        unique: true,
+        unique: [true, 'Email must be unique']
     },
-    refreshToken: {
+    refresh_token: {
         type: String,
-        required: [true, 'Refresh token is required']
     },
 }, {
     timestamps: true

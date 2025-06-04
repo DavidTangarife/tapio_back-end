@@ -4,7 +4,6 @@ exports.get_imap_connection = get_imap_connection;
 exports.get_imap_connection_ms = get_imap_connection_ms;
 exports.raw_emails = raw_emails;
 exports.sender_and_subject_since_date_callback = sender_and_subject_since_date_callback;
-const email_services_1 = require("../services/email.services");
 var Imap = require('node-imap'), inspect = require('util').inspect;
 // =============================================================
 // Get the imap connection object with the users authentication
@@ -126,7 +125,7 @@ function sender_and_subject_since_date_callback(imap, date, response) {
                 });
                 f.once('end', function () {
                     console.log('Done fetching all messages!');
-                    (0, email_services_1.saveEmailsFromIMAP)(emails);
+                    /*saveEmailsFromIMAP(emails)*/
                     page_data += '</ul>';
                     imap.end();
                     response.send(page_data);

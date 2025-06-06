@@ -9,10 +9,10 @@ interface CreateProjectInput {
 }
 /* Create and return a new project */
 export async function createProject(data: CreateProjectInput): Promise<IProject> {
- console.log("Inside createProject service, data:", data);
+//  console.log("Inside createProject service, data:", data);
   try {
     const project = await Project.create(data);
-    console.log("Project created successfully:", project);
+    // console.log("Project created successfully:", project);
     return project;
   } catch (error) {
     console.error("Error in createProject:", error);

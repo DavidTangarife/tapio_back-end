@@ -77,8 +77,8 @@ function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
  * Filters include matching subject keywords and sender email patterns.
  * Currently hardcoded for testing with a specific project ID.
  */
-export async function getFilteredEmails(projectId: string) {
-  // const projectId = new Types.ObjectId("");
+export async function getFilteredEmails(project_id: string) {
+  const projectId = new Types.ObjectId(project_id);
   
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
@@ -86,15 +86,15 @@ export async function getFilteredEmails(projectId: string) {
   const { filters, blockedFilters, startDate } = project;
 
   // Find the latest email already saved for this project
-  const latestEmail = await Email.findOne({ projectId }).sort({ date: -1 });
-  const dateThreshold = latestEmail && latestEmail.date
-    ? latestEmail.date
-    : startDate;
+  const latestEmail = await Email.findOne({ projectId }).sort({ mailBoxId: -1 });
+  // const dateThreshold = latestEmail && latestEmail.date
+  //   ? latestEmail.date
+  //   : startDate;
 
   // Create a base query object to match emails for this project
   const query: any = {
     projectId,
-    date: { $gt: dateThreshold },
+    // date: { $gt: dateThreshold },
     $and: []
   };
   const subjectFilter = buildRegexFilter(filters?.keywords, blockedFilters?.keywords);
@@ -107,7 +107,7 @@ export async function getFilteredEmails(projectId: string) {
   // If no $and filters were added, remove the property
   if (!query.$and.length) delete query.$and;
   
-  return await Email.find(query).sort({ date: -1 });
+  return await Email.find(query).sort({ mailBoxId: -1 });
 }
 
 // {

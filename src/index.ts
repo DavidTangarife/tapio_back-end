@@ -1,6 +1,5 @@
 import { Request, Response, Application } from "express";
 import mongoose from "mongoose";
-import { getEmailsByProject } from "./services/email.services";
 import createApp from "./app";
 import { config } from "dotenv";
 
@@ -26,10 +25,6 @@ app.get("/", async function(req: Request, res: Response) {
   );
 });
 
-app.get("/getemails", async (req: Request, res: Response) => {
-  const emails: any = await getEmailsByProject("682efb5211da37c9c95e0779");
-  res.send(emails)
-})
 
 mongoose.connect(MONGO_URL).then(() => {
   console.log("MongoDB connected");

@@ -3,14 +3,16 @@ import { findOrCreateUserFromGoogle, updateUserFullName } from '../services/user
 import { ObjectId } from 'bson';
 
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
-  const { userId, fullName } = req.body;
-  // console.log("Request body:", req.body);
+  const {  fullName } = req.body;
+  const userId = req.session.user_id;
+  console.log("🔥 PATCH /update-name hit");
+  console.log(userId);
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required." });
   }
   try {
     const updateUser = await updateUserFullName(
-      new ObjectId(String(userId)),
+      userId,
       fullName
     );
     // console.log("Request body:", req.body);
@@ -24,13 +26,13 @@ export const handleUpdateUserName = async (req: Request, res: Response) :Promise
 
 export async function handleGoogleAuth(req: Request, res: Response) :Promise<any> {
   try {
-    const { email, refreshToken } = req.body;
+    const { email, refresh_token } = req.body;
 
-    if (!email || !refreshToken) {
+    if (!email || !refresh_token) {
       return res.status(400).json({ message: "Missing email or refreshToken" });
     }
 
-    const user = await findOrCreateUserFromGoogle({ email, refreshToken });
+    const user = await findOrCreateUserFromGoogle({ email, refresh_token });
 
     res.status(200).json({ message: "User signed in via Google", user });
   } catch (error) {

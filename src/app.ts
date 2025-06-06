@@ -3,6 +3,8 @@ import cors from "cors";
 import projectRoutes from "./routes/project.routes";
 import errorHandler from "./middleware/error-handler";
 import googleRouter from "./routes/google.routes";
+import userRoutes from "./routes/user.routes";
+import emailRoutes from "./routes/email.routes"
 import microsoftRouter from "./routes/microsoft.routes";
 import testAuth from "./routes/auth.route";
 const session = require("express-session");
@@ -14,7 +16,10 @@ export default function createApp(): Application {
     uri: process.env.MONGO_URL,
     collection: 'sessions'
   })
-  app.use(cors());
+  app.use(cors({
+    origin: "http://localhost:5173", 
+    credentials: true,
+  }));
   app.use(express.json());
 
   //======================================================
@@ -45,6 +50,8 @@ export default function createApp(): Application {
   app.use("/api", googleRouter)
   app.use("/api", microsoftRouter)
   app.use("/api", testAuth);
+  app.use("/api", userRoutes);
+  app.use("/api", emailRoutes)
 
   //===================================================
   // Error Handling Middleware

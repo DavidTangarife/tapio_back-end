@@ -4,6 +4,8 @@ import projectRoutes from "./routes/project.routes";
 import errorHandler from "./middleware/error-handler";
 import googleRouter from "./routes/google.routes";
 import microsoftRouter from "./routes/microsoft.routes";
+import opportunityRoutes from "./routes/opportunity.routes";
+import statusRoutes from "./routes/status.routes";
 import testAuth from "./routes/auth.route";
 const session = require("express-session");
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -45,7 +47,8 @@ export default function createApp(): Application {
   app.use("/api", googleRouter)
   app.use("/api", microsoftRouter)
   app.use("/api", testAuth);
-
+  app.use("/api", opportunityRoutes);
+  app.use("/api", statusRoutes);
   //===================================================
   // Error Handling Middleware
   //

@@ -1,4 +1,4 @@
-import Opportunity from "../models/opportunity.model"
+import Opportunity from "../models/opportunity.model";
 import { Types } from "mongoose";
 
 interface CreateOpportunityInput {
@@ -22,7 +22,6 @@ export async function createOpportunity(data: CreateOpportunityInput) {
   }
 }
 
-
 export async function getOpportunitiesByProject(projectId: Types.ObjectId) {
   return Opportunity.findOppByProjectId(projectId);
 }
@@ -30,7 +29,6 @@ export async function getOpportunitiesByProject(projectId: Types.ObjectId) {
 export async function getOpportunitiesByStatus(statusId: Types.ObjectId) {
   return Opportunity.findOppByStatusId(statusId);
 }
-
 
 /* Update status of an opportunity (move card between columns) */
 export async function updateOpportunityStatus(

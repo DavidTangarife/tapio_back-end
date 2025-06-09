@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import { updateUserFullName } from '../services/user.services';
+import { getUserName, updateUserFullName } from '../services/user.services';
 import { ObjectId } from 'bson';
 
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
@@ -20,3 +20,23 @@ export const handleUpdateUserName = async (req: Request, res: Response) :Promise
     res.status(500).json({ error: err.message });
   }
 };
+
+export const handleGetUserName = async (req: Request, res: Response) :Promise<any> => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const fullName = await getUserName(userId);
+
+    if (!fullName) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ full_name: fullName });
+  } catch (error) {
+    console.error("Error fetching user name:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+

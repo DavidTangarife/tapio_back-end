@@ -8,7 +8,7 @@ interface Snip {
 }
 
 interface IOpportunity extends Document {
- projectId: Types.ObjectId;
+  projectId: Types.ObjectId;
   statusId: Types.ObjectId;
   emailId: Types.ObjectId;
   title: string;

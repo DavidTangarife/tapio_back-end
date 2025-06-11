@@ -3,7 +3,7 @@ import { createOpportunity } from '../services/opportunity.services';
 import { ObjectId } from "bson"
 
 
-export const createOpportunityController = async (req: Request, res: Response) => {
+export const createOpportunityController = async (req: Request, res: Response): Promise<any> => {
   const { projectId, statusId, title, company } = req.body;
    if (!projectId || !statusId || !title || !company?.name) {
     return res.status(400).json({ error: "Missing required fields." });

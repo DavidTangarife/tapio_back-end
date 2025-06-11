@@ -24,6 +24,9 @@ const userSchema = new mongoose_1.Schema({
     refresh_token: {
         type: String,
     },
+    token_cache: {
+        type: String,
+    }
 }, {
     timestamps: true
 });

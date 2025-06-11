@@ -8,15 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleGoogleRedirect = exports.loginWithGoogle = void 0;
 const google_1 = require("../services/google");
-const url_1 = __importDefault(require("url"));
+const url_1 = require("url");
 const state_1 = require("../services/state");
 const user_services_1 = require("../services/user.services");
+const mongoose_1 = require("mongoose");
 const google_client = (0, google_1.get_google_auth_client)('http://localhost:3000/api/google-redirect');
 const loginWithGoogle = (req, res, next) => {
     const url = (0, google_1.get_google_auth_url_email)(google_client, (0, state_1.setState)(req));
@@ -25,17 +23,16 @@ const loginWithGoogle = (req, res, next) => {
 };
 exports.loginWithGoogle = loginWithGoogle;
 const handleGoogleRedirect = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const query = url_1.default.parse(req.url || "", true).query;
+    const query = (0, url_1.parse)(req.url || "", true).query;
     if (query.error)
         next(query.error);
     (0, state_1.checkState)(req, String(query.state));
     const result = yield (0, google_1.processGoogleCode)(String(query.code), google_client);
-    console.log(result);
     const userData = { email: result.email, refresh_token: result.refresh_token };
     const user = yield (0, user_services_1.findOrCreateUserFromGoogle)(userData);
-    console.log(user);
-    req.session.user_id = user[0]._id.toString();
-    console.log(req.session.user_id);
-    res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1]);
+    req.session.user_id = user[0]._id;
+    req.session.save();
+    const emails = yield (0, google_1.getGmailApi)(userData.refresh_token, result.access_token, new mongoose_1.Types.ObjectId(1));
+    res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1] + '\n\n' + JSON.stringify(emails));
 });
 exports.handleGoogleRedirect = handleGoogleRedirect;

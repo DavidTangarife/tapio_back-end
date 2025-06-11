@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findOrCreateUserFromGoogle = findOrCreateUserFromGoogle;
+exports.findOrCreateUserFromMicrosoft = findOrCreateUserFromMicrosoft;
 exports.updateUserFullName = updateUserFullName;
 exports.getUserByEmail = getUserByEmail;
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -36,6 +37,24 @@ function findOrCreateUserFromGoogle(googleUserData) {
     });
 }
 ;
+function findOrCreateUserFromMicrosoft(microsoftUserData) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { email, token_cache } = microsoftUserData;
+        let user = yield user_model_1.default.findOne({ email });
+        if (!user) {
+            user = yield user_model_1.default.create({ email, token_cache });
+            return [user, 'new'];
+        }
+        else {
+            // update token cache if changed
+            if (user.token_cache !== token_cache) {
+                user.token_cache = token_cache;
+                yield user.save();
+            }
+        }
+        return [user, 'existing'];
+    });
+}
 /* Update full name after user has authenticated */
 function updateUserFullName(userId, fullName) {
     return __awaiter(this, void 0, void 0, function* () {

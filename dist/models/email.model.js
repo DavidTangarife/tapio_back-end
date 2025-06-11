@@ -15,6 +15,7 @@ const emailSchema = new mongoose_1.Schema({
     // opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
     mailBoxId: { type: String },
     subject: { type: String },
+    snippet: { type: String, required: true },
     from: { type: String, required: true },
     to: [{ type: String, required: true }],
     cc: [{ type: String }],

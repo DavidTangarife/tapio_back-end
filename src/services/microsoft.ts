@@ -1,5 +1,4 @@
 import {
-  LogLevel,
   Configuration,
   ConfidentialClientApplication,
   CryptoProvider,
@@ -8,6 +7,7 @@ import {
   SilentFlowRequest,
 } from "@azure/msal-node"
 import { RequestWithSession } from "../types/session";
+import axios from "axios";
 
 const cryptoProvider = new CryptoProvider();
 
@@ -19,17 +19,14 @@ const config: Configuration = {
   },
   system: {
     loggerOptions: {
-      loggerCallback(
-        loglevel: LogLevel,
-        message: string,
-        containsPii: boolean
-      ) {
-        console.log(message);
-      },
-      piiLoggingEnabled: false,
-      logLevel: LogLevel.Verbose,
     },
   },
+};
+
+interface MicrosoftUserData {
+  email: string;
+  token_cache: string;
+  token: string;
 };
 
 //==========================================
@@ -46,8 +43,8 @@ export const buildPkceCodes = async (req: RequestWithSession) => {
     };
     req.session.pkceCodes.verifier = verifier;
     req.session.pkceCodes.challenge = challenge;
-  })
-}
+  });
+};
 
 //===========================================
 // Parameters used to build the Microsoft
@@ -56,14 +53,14 @@ export const buildPkceCodes = async (req: RequestWithSession) => {
 
 export const getAuthCodeParams = (req: RequestWithSession) => {
   const authCodeUrlParameters: AuthorizationUrlRequest = {
-    scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"],
+    scopes: ["https://graph.microsoft.com/Mail.Read"],
     redirectUri: "http://localhost:3000/api/microsoft-redirect",
     codeChallenge: req.session.pkceCodes.challenge,
     codeChallengeMethod: req.session.pkceCodes.challengeMethod,
     state: req.session.state,
   };
-  return authCodeUrlParameters
-}
+  return authCodeUrlParameters;
+};
 
 //==========================================
 // Builds the tokenRequest parameters for
@@ -73,13 +70,13 @@ export const getAuthCodeParams = (req: RequestWithSession) => {
 export const getTokenRequest = (req: RequestWithSession, query: any) => {
   const tokenRequest: AuthorizationCodeRequest = {
     code: query.code as string,
-    scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"],
+    scopes: ["https://graph.microsoft.com/Mail.Read"],
     redirectUri: "http://localhost:3000/api/microsoft-redirect",
     codeVerifier: req.session.pkceCodes!.verifier,
     clientInfo: query.client_info as string,
   };
-  return tokenRequest
-}
+  return tokenRequest;
+};
 
 //================================================
 // Silently refresh the Microsoft Access Token if
@@ -87,26 +84,30 @@ export const getTokenRequest = (req: RequestWithSession, query: any) => {
 //================================================
 
 export const silentlyRefreshToken = async (token_cache: string) => {
-  const client = getNewMicrosoftClient()
-  client.getTokenCache().deserialize(token_cache)
-  const accounts = await client.getTokenCache().getAllAccounts()
+  const client = getNewMicrosoftClient();
+  client.getTokenCache().deserialize(token_cache);
+  const accounts = await client.getTokenCache().getAllAccounts();
 
   const tokenRequest: SilentFlowRequest = {
     account: accounts[0],
-    scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All"]
-  }
-  await client.acquireTokenSilent(tokenRequest).then(() => {
+    scopes: ["https://graph.microsoft.com/Mail.Read"],
+  };
+  const userData: MicrosoftUserData = { email: '', token_cache: '', token: '' };
+  await client.acquireTokenSilent(tokenRequest).then((token) => {
+    userData.email = token.account!.username;
+    userData.token_cache = client.getTokenCache().serialize();
+    userData.token = token.accessToken;
   }).catch((error) => {
-    throw new Error(error)
+    throw new Error(error);
   })
-  return client
+  return userData;
 }
 
 export const getNewMicrosoftClient = (): ConfidentialClientApplication => {
-  return new ConfidentialClientApplication(config)
-}
+  return new ConfidentialClientApplication(config);
+};
 
-export const confidentialClient = new ConfidentialClientApplication(config)
+export const confidentialClient = new ConfidentialClientApplication(config);
 
 //=====================================================
 // Builds an XOAUTH2 token. This is only required if
@@ -122,5 +123,29 @@ export const buildXOAuth2Token = (username: string, accessToken: string) => {
     accessToken +
     "\x01\x01"
   ).toString("base64");
-  return token
-}
+  return token;
+};
+
+//=====================================================
+// Takes a MicrosoftUserData object with an auth token 
+// & a date and then returns the response of all the
+// emails since that date.
+//=====================================================
+
+export const getEmailsFromDate = async (userData: MicrosoftUserData, date: Date) => {
+  const response: any = await axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString()}&count=true`, { headers: { 'Authorization': `Bearer ${userData.token}` } })
+    .then((result: any) => {
+      return axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString()}&top=${result.data['@odata.count']}`, { headers: { 'Authorization': `Bearer ${userData.token} ` } });
+    });
+  return response;
+};
+
+//=====================================================
+// Takes a MicrosoftUserData object with an auth token 
+// & an email id and then returns that email.
+//=====================================================
+
+export const getOneEmail = async (userData: MicrosoftUserData, id: string) => {
+  const response: any = await axios.get(`https://graph.microsoft.com/v1.0/me/messages/${id}`, { headers: { 'Authorization': `Bearer ${userData.token}` } })
+  return response;
+};

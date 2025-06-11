@@ -19,7 +19,7 @@ if (!MONGO_URL) {
 const app: Application = createApp();
 const port = process.env.PORT || 3000;
 
-app.get("/", async function(req: Request, res: Response) {
+app.get("/", async function (req: Request, res: Response) {
   res.send(
     `Welcome to Tapio, I'd love to help but I'm an API! Please call me correctly`
   );
@@ -30,7 +30,7 @@ mongoose.connect(MONGO_URL).then(() => {
   console.log("MongoDB connected");
   app.listen(port, () => {
     console.log(
-      `Tapio is ready to rock your socks off on https://localhost:${port}`
+      `Tapio is ready to rock your socks off on http://localhost:${port}`
     );
     console.log("Hey, You, Yes you, its all gonna be ok! YOU GOT THIS!");
   });

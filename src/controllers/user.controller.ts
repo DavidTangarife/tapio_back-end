@@ -35,7 +35,7 @@ export const handleGetUserName = async (req: Request, res: Response) :Promise<an
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json({ full_name: fullName });
+    return res.status(200).json({ fullName });
   } catch (error) {
     console.error("Error fetching user name:", error);
     return res.status(500).json({ error: "Internal server error" });

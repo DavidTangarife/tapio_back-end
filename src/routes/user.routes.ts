@@ -4,7 +4,7 @@ import requireAuth from "../middleware/require-auth";
 const router = express.Router();
 
 router.put("/update-name", handleUpdateUserName);
-router.get("/get-fullname", handleGetUserName);
+router.get("/full-name", handleGetUserName);
 router.patch("/update-name", requireAuth, handleUpdateUserName);
 router.post("/auth/google", handleGoogleAuth);
 

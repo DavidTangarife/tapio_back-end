@@ -1,10 +1,12 @@
 import express from "express";
-import { createStatusController } from "../controllers/status.controller";
-import { getKanbanBoardData } from "../controllers/status.controller";
+import {
+  createStatusController,
+  getKanbanController,
+} from "../controllers/status.controller";
 
 const router = express.Router();
 
 router.post("/status", createStatusController);
-router.get("/kanban", getKanbanBoardData);
+router.get("/status", getKanbanController);
 
 export default router;

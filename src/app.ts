@@ -3,6 +3,8 @@ import cors from "cors";
 import projectRoutes from "./routes/project.routes";
 import errorHandler from "./middleware/error-handler";
 import googleRouter from "./routes/google.routes";
+import userRoutes from "./routes/user.routes";
+import emailRoutes from "./routes/email.routes"
 import microsoftRouter from "./routes/microsoft.routes";
 import opportunityRoutes from "./routes/opportunity.routes";
 import statusRoutes from "./routes/status.routes";
@@ -16,7 +18,10 @@ export default function createApp(): Application {
     uri: process.env.MONGO_URL,
     collection: 'sessions'
   })
-  app.use(cors());
+  app.use(cors({
+    origin: "http://localhost:5173", 
+    credentials: true,
+  }));
   app.use(express.json());
 
   //======================================================
@@ -26,19 +31,19 @@ export default function createApp(): Application {
   // This variable is a 32 byte hex string and is 
   // sent to the oauth2 server.
   //======================================================
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      store,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        sameSite: "lax" //For OAuth redirects
-      }
-    })
-  );
+  // app.use(
+  //   session({
+  //     secret: process.env.SESSION_SECRET,
+  //     resave: false,
+  //     saveUninitialized: false,
+  //     store,
+  //     cookie: {
+  //       secure: process.env.NODE_ENV === "production",
+  //       httpOnly: true,
+  //       sameSite: "lax" //For OAuth redirects
+  //     }
+  //   })
+  // );
 
   //=======================
   //        ROUTES
@@ -47,6 +52,9 @@ export default function createApp(): Application {
   app.use("/api", googleRouter)
   app.use("/api", microsoftRouter)
   app.use("/api", testAuth);
+  app.use("/api", userRoutes);
+  app.use("/api", emailRoutes)
+
   app.use("/api", opportunityRoutes);
   app.use("/api", statusRoutes);
   //===================================================

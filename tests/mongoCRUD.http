@@ -1,0 +1,306 @@
+@base_project_url = http://localhost:3000/api
+@projectId = 68467c169e8270a37aba3608
+
+# ===================== USERS =====================
+
+# @base_project_url = http://localhost:3000/api
+
+# # Create Project
+# POST {{base_project_url}}/projects
+# content-type: application/json
+
+# {
+#     "userId": "sample",
+#     "name": "David no Shigoto",
+#     "startDate": 2025-05-15 ,
+#     "filters": {
+#         "keywords": [""],
+#         "senders": ["@rea.com"],
+#     } 
+# }
+###-----------------------------------------------
+
+# ===================== PROJECT =====================
+# Create Project
+POST {{base_project_url}}/projects
+content-type: application/json
+
+{
+    "userId": "6846791b64df7dd62b67facf",
+    "name": "David no Shigoto",
+    "startDate": "2025-06-09" ,
+    "filters": {
+        "keywords": ["Internship"],
+        "senders": ["@rea.com"]
+    } 
+}
+###-----------------------------------------------
+# I believe project shouldnt have the filters but each opportunitie or maybe it is a good idea to keep them in the project
+
+
+# ===================== BOARDS =====================
+# Create Status = Applied
+POST {{base_project_url}}/status
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "title": "Applied",
+    "color": "empty"
+}
+###-----------------------------------------------
+# Color should stay empty and should only belong to the opportunities I believe
+
+# Create Status = Interviewing
+POST {{base_project_url}}/status
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "title": "Interview",
+    "color": "empty"
+}
+###-----------------------------------------------
+
+# Create Status = Blackhole
+POST {{base_project_url}}/status
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "title": "Blackhole",
+    "color": "empty"
+}
+###-----------------------------------------------
+
+
+# ===================== OPPORTUNITIES =====================
+# Create Opprotunity = REA
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c9d9e8270a37aba3610",
+    "title": "REA internship",
+    "company": {
+        "name": "REA",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+# Company should just be a name
+# Too many relationship that might not be need like email id to opportunities
+# email is already connected to project and project to opportunities
+# actually prject to boards and borad to opprotunities
+
+# Create Opprotunity = Domain
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e" ,
+    "title": "Domain Internship",
+    "company": {
+        "name": "Domain",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Crown
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467ca19e8270a37aba3612",
+    "title": "Crown Internship",
+    "company": {
+        "name": "Crown",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Google
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c9d9e8270a37aba3610",
+    "title": "Google Internship",
+    "company": {
+        "name": "Google",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Seek
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e",
+    "title": "Seek Internship",
+    "company": {
+        "name": "Seek",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = NAB
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e",
+    "title": "NAB Internship",
+    "company": {
+        "name": "NAB",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = CommBank
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e",
+    "title": "CommBank Internship",
+    "company": {
+        "name": "CommBank",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Canva
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c9d9e8270a37aba3610",
+    "title": "Canva Internship",
+    "company": {
+        "name": "Canva",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = FAIR
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c9d9e8270a37aba3610",
+    "title": "FAIR Internship",
+    "company": {
+        "name": "FAIR",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Coles
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467ca19e8270a37aba3612",
+    "title": "Coles Internship",
+    "company": {
+        "name": "Coles",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Amazon
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e",
+    "title": "Amazon Internship",
+    "company": {
+        "name": "Amazon",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = OfficeWorks
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467c989e8270a37aba360e",
+    "title": "OfficeWorks Internship",
+    "company": {
+        "name": "OfficeWorks",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Create Opprotunity = Woolworths
+POST {{base_project_url}}/opportunity
+content-type: application/json
+
+{
+    "projectId": "68467c169e8270a37aba3608",
+    "statusId": "68467ca19e8270a37aba3612",
+    "title": "Woolworths Internship",
+    "company": {
+        "name": "Woolworths",
+        "faviconUrl": ""
+    },
+    "Color": "",
+    "snips": []
+}
+###-----------------------------------------------
+
+# Retrieve Opprotunities by projectid
+GET {{base_project_url}}/opportunity?projectId={{projectId}}
+content-type: application/json
+###-----------------------------------------------

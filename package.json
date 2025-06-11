@@ -29,7 +29,7 @@
     "googleapis-common": "^7.2.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
-    "mongodb": "^6.16.0",
+    "mongodb": "^6.17.0",
     "mongoose": "^8.14.2",
     "morgan": "~1.9.1",
     "node-imap": "^0.9.6",

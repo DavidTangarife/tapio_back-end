@@ -1,16 +1,18 @@
 import {Request, Response} from 'express';
-import { updateUserFullName } from '../services/user.services';
+import { getUserName, updateUserFullName,findOrCreateUserFromGoogle } from '../services/user.services';
 import { ObjectId } from 'bson';
 
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
-  const { userId, fullName } = req.body;
-  // console.log("Request body:", req.body);
+  const {  fullName } = req.body;
+  const userId = req.session.user_id;
+  console.log("🔥 PATCH /update-name hit");
+  console.log(userId);
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required." });
   }
   try {
     const updateUser = await updateUserFullName(
-      new ObjectId(String(userId)),
+      userId,
       fullName
     );
     // console.log("Request body:", req.body);
@@ -20,3 +22,39 @@ export const handleUpdateUserName = async (req: Request, res: Response) :Promise
     res.status(500).json({ error: err.message });
   }
 };
+
+export const handleGetUserName = async (req: Request, res: Response) :Promise<any> => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const fullName = await getUserName(userId);
+
+    if (!fullName) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ full_name: fullName });
+  } catch (error) {
+    console.error("Error fetching user name:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export async function handleGoogleAuth(req: Request, res: Response) :Promise<any> {
+  try {
+    const { email, refresh_token } = req.body;
+
+    if (!email || !refresh_token) {
+      return res.status(400).json({ message: "Missing email or refreshToken" });
+    }
+
+    const user = await findOrCreateUserFromGoogle({ email, refresh_token });
+
+    res.status(200).json({ message: "User signed in via Google", user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+}

@@ -62,3 +62,9 @@ export async function updateUserFullName(userId: string | Types.ObjectId, fullNa
 export async function getUserByEmail(email: string): Promise<IUser | null> {
   return await User.findOne({ email });
 };
+
+/* Return a user's name */
+export async function getUserName(userId: string) {
+  const user = await User.findById(userId).select("fullName");
+  return user ? user.fullName : null;
+};

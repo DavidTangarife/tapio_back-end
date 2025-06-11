@@ -46,7 +46,6 @@ export const handleMicrosoftRedirect = async (req: Request, res: Response, next:
 export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
   const query = parse(req.url || "", true).query;
   const user = req.session.user_id
-  console.log(query)
 
   if (!user) {
     res.redirect('/microsoft-login')
@@ -54,7 +53,6 @@ export const getEmailsByDate = async (req: Request, res: Response, next: NextFun
 
   const user_account = await getUserById(user)
   const user_data = await silentlyRefreshToken(user_account!.token_cache || '')
-  console.time('a')
   //const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
   const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
   if (emails.status == 200) {
@@ -65,5 +63,4 @@ export const getEmailsByDate = async (req: Request, res: Response, next: NextFun
   } else {
     res.send('Sorry, Something went wrong')
   }
-  console.timeEnd('a')
 }

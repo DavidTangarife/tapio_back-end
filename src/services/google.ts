@@ -2,14 +2,9 @@ import axios from 'axios';
 import { google, Auth } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
 import { Types } from 'mongoose'
+import Email, { IEmail } from '../models/email.model'
+import { emailInfo } from '../types/email';
 
-type Email = {
-  mailBoxId: number;
-  from: string;
-  subject: string;
-  projectId: Types.ObjectId;
-  date: Date;
-};
 
 google.options({
   http2: false
@@ -88,21 +83,24 @@ export async function processGoogleCode(code: string, client: OAuth2Client) {
   return { ...tokens, email }
 }
 
-export const getGmailApi = async (refresh_token: string, access_token: string, projectId: Types.ObjectId) => {
+export const getGmailApi = async (refresh_token: string, projectId: Types.ObjectId) => {
   //===============================
   // Setup Google Auth
   //===============================
   const auth_client = get_google_auth_client();
   auth_client.setCredentials({ refresh_token: refresh_token })
+  const { token } = await auth_client.getAccessToken()
 
   //===========================================
   // Setup gmail client and get list of emails
   // to fetch
+  // WARN: Currently set to limit to 5 emails for testing purposes 
+  //
   //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
   const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 5 })
   let payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
-  const email_list: Email[] = [];
+  const email_list: any[] = [];
 
   //===========================================
   // Since some requests fail we will do this
@@ -130,7 +128,7 @@ export const getGmailApi = async (refresh_token: string, access_token: string, p
       // Get the batch response and cut up the 
       // inidividual responses.
       //=======================================
-      const response = await batchGetEmails(slice, access_token)
+      const response = await batchGetEmails(slice, token!)
       const responses = response.data.split('--batch')
       for (const i of responses) {
         //=====================================
@@ -152,7 +150,7 @@ export const getGmailApi = async (refresh_token: string, access_token: string, p
             const from = payload.headers.find((x: any) => x.name === 'From').value
             const subject = payload.headers.find((x: any) => x.name === 'Subject').value
             const date = payload.headers.find((x: any) => x.name === 'Date').value
-            email_list.push({ mailBoxId: id, from, subject, projectId, date })
+            email_list.push({ mailBoxId: id, snippet, from, subject, projectId, date })
           }
           //==============================
           // Otherwise request failed.

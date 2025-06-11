@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types, Model } from "mongoose";
 import User from "./user.model"; 
-
+import Status from "./status.model";
+import Opportunity from "./opportunity.model"
 
 export interface IProject extends Document {
   userId: Types.ObjectId;
@@ -10,6 +11,11 @@ export interface IProject extends Document {
     keywords: string[];
     senders: string[];
   };
+  blockedFilters?: {
+  keywords: string[];
+  senders: string[];
+};
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
   // Instance method
@@ -22,16 +28,21 @@ interface IProjectModel extends Model<IProject> {
 }
 
 const projectSchema = new Schema<IProject>({
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true, unique: true },
-    startDate: { type: Date, required: true },
-    filters: {
-      keywords: [{ type: String }],
-      senders: [{ type: String }]
-    },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true, unique: true },
+  startDate: { type: Date, required: true },
+  filters: {
+    keywords: [{ type: String }],
+    senders: [{ type: String }]
+  },
+  blockedFilters: {
+    keywords: [{ type: String }],
+    senders: [{ type: String }]
+  },
+  lastLogin: { type: Date, default: new Date() }
 }, {
-        timestamps: true
-    }
+    timestamps: true
+  }
 );
 
 // Instance method
@@ -112,6 +123,14 @@ projectSchema.pre("save", function (next) {
 /* Show a message after saving */
 projectSchema.post("save", function (doc) {
   console.log(`Project saved: ${doc._id}`);
+});
+
+// Delete status and opportunities as well when a project is deleted
+projectSchema.pre("deleteOne", { document: true, query: false }, async function(next) {
+  const projectId = this._id;
+  await Status.deleteMany({ projectId });
+  await Opportunity.deleteMany({ projectId });
+  next();
 });
 
 export default model<IProject, IProjectModel>("Project", projectSchema);

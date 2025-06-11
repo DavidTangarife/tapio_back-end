@@ -1,10 +1,11 @@
 import express from "express";
-import { handleGetUserName, handleUpdateUserName } from "../controllers/user.controller";
-
+import { handleGetUserName, handleUpdateUserName, handleGoogleAuth } from "../controllers/user.controller";
+import requireAuth from "../middleware/require-auth";
 const router = express.Router();
 
 router.put("/update-name", handleUpdateUserName);
 router.get("/get-fullname", handleGetUserName);
-// router.post("/google-auth", handleGoogleOAuthCallback);
+router.patch("/update-name", requireAuth, handleUpdateUserName);
+router.post("/auth/google", handleGoogleAuth);
 
 export default router;

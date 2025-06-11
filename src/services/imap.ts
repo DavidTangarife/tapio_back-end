@@ -2,9 +2,15 @@ import { Response } from "express";
 import Connection from "node-imap";
 import { json } from "node:stream/consumers";
 import { saveEmailsFromIMAP } from "../services/email.services"
+import { Types } from "mongoose";
 
 var Imap = require('node-imap'), inspect = require('util').inspect;
-
+type Email = {
+  mailBoxId: number;
+  from: string;
+  subject: string;
+  projectId: Types.ObjectId;
+};
 // =============================================================
 // Get the imap connection object with the users authentication
 // =============================================================
@@ -76,34 +82,45 @@ export function raw_emails(imap: Connection, date: String, response: Response) {
 // This is a sample of a callback to get the sender and subject of the
 // most recent email.
 // ===================================================================
-export function sender_and_subject_since_date_callback(imap: Connection, date: String, response: any) {
-  let emails: any = []
+export function sender_and_subject_since_date_callback(
+  imap: Connection,
+  date: string,
+  projectId: Types.ObjectId,
+  callback: (emails: Email[]) => void
+): void {
+  const emails: Email[] = [];
   let page_data = '<ul>'
-  imap.once('ready', function() {
-    open_inbox(function(err: any, box: any) {
-      if (err) throw err;
-      // ==========================================================
-      // Search params can narrow the search but we're seeking all
-      // emails since X date.
-      //
-      // We can then take note of the most recent email and when a
-      // user logs in or refreshes inbox we can look for all emails
-      // after the id of the most recent one.
-      // ===========================================================
-      imap.search(['ALL', ['SINCE', date]], function(err, results) {
-        var f = imap.fetch(results, { bodies: ['HEADER', 'TEXT'] });
-        if (err) throw err;
-        f.on('message', function(msg, seqno) {
-          var mailBoxId = seqno;
-          let from = ''
-          let subject = ''
-          msg.on('body', function(stream, info) {
-            var buffer = '', count = 0;
-            stream.on('data', function(chunk) {
-              count += chunk.length;
+  console.log('IMAP is ready');
+  imap.once('ready', function () {
+    
+    open_inbox(function (err: any, box: any) {
+      if (err) {
+        console.error('Open inbox error:', err);
+        callback([]); 
+        return;
+      }
+
+      imap.search(['ALL', ['SINCE', date]], function (err, results) {
+        if (err || !results || results.length === 0) {
+          console.error('Search error or no results:', err);
+          imap.end();
+          callback([]);
+          return;
+        }
+
+        const f = imap.fetch(results, { bodies: ['HEADER', 'TEXT'] });
+
+        f.on('message', function (msg, seqno) {
+          let from = '';
+          let subject = '';
+          const mailBoxId = seqno;
+
+          msg.on('body', function (stream, info) {
+            let buffer = '';
+            stream.on('data', function (chunk) {
               buffer += chunk.toString('utf8');
             });
-            stream.once('end', function() {
+            stream.once('end', function () {
               if (info.which !== 'TEXT') {
                 from = inspect(Imap.parseHeader(buffer).from[0]);
                 subject = inspect(Imap.parseHeader(buffer).subject[0]);
@@ -111,24 +128,30 @@ export function sender_and_subject_since_date_callback(imap: Connection, date: S
               }
             });
           });
-          msg.once('attributes', function(attrs) {
-          })
-          msg.once('end', function() {
+
+          msg.once('end', function () {
             console.log(mailBoxId + 'Finished');
-            emails.push({ mailBoxId, from, subject, projectId: "682efb5211da37c9c95e0779" })
+            emails.push({ mailBoxId, from, subject, projectId });
           });
         });
-        f.once('error', function(err) {
-          console.log('Fetch error: ' + err);
-        });
-        f.once('end', function() {
-          console.log('Done fetching all messages!');
-          /*saveEmailsFromIMAP(emails)*/
-          page_data += '</ul>'
+
+        f.once('error', function (err) {
+          console.error('Fetch error:', err);
           imap.end();
-          response.send(page_data)
+          callback([]);
+        });
+
+        f.once('end', function () {
+          imap.end();
+          callback(emails);
         });
       });
     }, imap);
   });
-};
+
+  imap.once('error', function (err) {
+    console.error('IMAP connection error:', err);
+    callback([]);
+  });
+imap.connect()
+}

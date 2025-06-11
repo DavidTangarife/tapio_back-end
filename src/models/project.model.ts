@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types, Model } from "mongoose";
 import User from "./user.model"; 
-
+import Status from "./status.model";
+import Opportunity from "./opportunity.model"
 
 export interface IProject extends Document {
   userId: Types.ObjectId;
@@ -122,6 +123,14 @@ projectSchema.pre("save", function (next) {
 /* Show a message after saving */
 projectSchema.post("save", function (doc) {
   console.log(`Project saved: ${doc._id}`);
+});
+
+// Delete status and opportunities as well when a project is deleted
+projectSchema.pre("deleteOne", { document: true, query: false }, async function(next) {
+  const projectId = this._id;
+  await Status.deleteMany({ projectId });
+  await Opportunity.deleteMany({ projectId });
+  next();
 });
 
 export default model<IProject, IProjectModel>("Project", projectSchema);

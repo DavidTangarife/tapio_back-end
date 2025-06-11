@@ -37,6 +37,7 @@
     "xoauth2": "^1.2.0"
   },
   "devDependencies": {
+    "@microsoft/microsoft-graph-types": "^2.40.0",
     "@types/connect-mongodb-session": "^2.4.8",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",

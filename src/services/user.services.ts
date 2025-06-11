@@ -68,3 +68,8 @@ export async function getUserName(userId: string) {
   const user = await User.findById(userId).select("fullName");
   return user ? user.fullName : null;
 };
+
+/* Return a user using id */
+export async function getUserById(_id: string): Promise<IUser | null> {
+  return await User.findOne({ _id });
+};

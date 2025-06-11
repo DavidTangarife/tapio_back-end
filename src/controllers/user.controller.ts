@@ -5,8 +5,7 @@ import { ObjectId } from 'bson';
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
   const {  fullName } = req.body;
   const userId = req.session.user_id;
-  console.log("🔥 PATCH /update-name hit");
-  console.log(userId);
+  // console.log(userId);
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required." });
   }

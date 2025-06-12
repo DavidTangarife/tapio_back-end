@@ -1,5 +1,9 @@
 import express from "express";
-import { handleGetUserName, handleUpdateUserName, handleGoogleAuth } from "../controllers/user.controller";
+import {
+  handleGetUserName,
+  handleUpdateUserName,
+  handleGoogleAuth,
+} from "../controllers/user.controller";
 import requireAuth from "../middleware/require-auth";
 const router = express.Router();
 

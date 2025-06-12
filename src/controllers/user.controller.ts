@@ -1,28 +1,35 @@
-import {Request, Response} from 'express';
-import { getUserName, updateUserFullName,findOrCreateUserFromGoogle } from '../services/user.services';
-import { ObjectId } from 'bson';
+import { Request, Response } from "express";
+import {
+  getUserName,
+  updateUserFullName,
+  findOrCreateUserFromGoogle,
+} from "../services/user.services";
+import { ObjectId } from "bson";
 
-export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
-  const {  fullName } = req.body;
+export const handleUpdateUserName = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { fullName } = req.body;
   const userId = req.session.user_id;
   // console.log(userId);
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required." });
   }
   try {
-    const updateUser = await updateUserFullName(
-      userId,
-      fullName
-    );
+    const updateUser = await updateUserFullName(userId, fullName);
     // console.log("Request body:", req.body);
 
     res.status(200).json(updateUser);
-  } catch (err:any) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
-export const handleGetUserName = async (req: Request, res: Response) :Promise<any> => {
+export const handleGetUserName = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const userId = req.session.user_id;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -41,8 +48,10 @@ export const handleGetUserName = async (req: Request, res: Response) :Promise<an
   }
 };
 
-
-export async function handleGoogleAuth(req: Request, res: Response) :Promise<any> {
+export async function handleGoogleAuth(
+  req: Request,
+  res: Response
+): Promise<any> {
   try {
     const { email, refresh_token } = req.body;
 
@@ -57,3 +66,4 @@ export async function handleGoogleAuth(req: Request, res: Response) :Promise<any
     res.status(500).json({ message: "Server error", error });
   }
 }
+

@@ -1,10 +1,11 @@
 import { Schema, model, Document, Types, Model } from "mongoose";
 
-interface IEmail extends Document {
+export interface IEmail extends Document {
   projectId: Types.ObjectId;
   // opportunityId?: Types.ObjectId;
   mailBoxId: string;
   subject: string;
+  snippet: string;
   from: string;
   to?: string[];
   cc?: string[];
@@ -34,12 +35,13 @@ const emailSchema = new Schema<IEmail>({
   // opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
   mailBoxId: { type: String },
   subject: { type: String },
+  snippet: { type: String, required: true },
   from: { type: String, required: true },
   to: [{ type: String, required: true }],
   cc: [{ type: String }],
   bcc: [{ type: String }],
   date: { type: Date },
-  isRead: { type: Boolean, default: false},
+  isRead: { type: Boolean, default: false },
   isTapped: { type: Boolean, default: false },
   isDeleted: { type: Boolean, default: false },
   isReplied: { type: Boolean, default: false },
@@ -65,7 +67,7 @@ emailSchema.statics.findByProjectId = async function(projectId: Types.ObjectId) 
   return this.find({ projectId })
 }
 
-emailSchema.post("save", function (doc) {
+emailSchema.post("save", function(doc) {
   console.log(`Email saved: ${doc._id}`);
 });
 

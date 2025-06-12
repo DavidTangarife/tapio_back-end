@@ -3,7 +3,9 @@ import { get_google_auth_client, get_google_auth_url_email, getGmailApi, process
 import { parse } from "url"
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
-import { findOrCreateUserFromGoogle } from "../services/user.services";
+import { findOrCreateUserFromGoogle, getUserById } from "../services/user.services";
+import { Types } from "mongoose";
+import { saveEmailsFromIMAP } from "../services/email.services";
 
 const google_client: OAuth2Client = get_google_auth_client('http://localhost:3000/api/google-redirect')
 
@@ -29,6 +31,22 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
 
   req.session.user_id = user[0]._id
   req.session.save();
-  await getGmailApi(userData.refresh_token, result.access_token!)
   res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
+}
+
+export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
+  
+    console.log(req.body);
+    const query = parse(req.url || "", true).query;
+    const user = req.session.user_id
+
+    if (!user) {
+      res.redirect('/google-login')
+    }
+
+    const user_account = await getUserById(user)
+    const emails = await getGmailApi(user_account!.refresh_token || '', req.body.projectId)
+    saveEmailsFromIMAP(emails)
+    res.send(emails)
+  
 }

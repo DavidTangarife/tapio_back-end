@@ -31,19 +31,19 @@ export default function createApp(): Application {
   // This variable is a 32 byte hex string and is 
   // sent to the oauth2 server.
   //======================================================
-  // app.use(
-  //   session({
-  //     secret: process.env.SESSION_SECRET,
-  //     resave: false,
-  //     saveUninitialized: false,
-  //     store,
-  //     cookie: {
-  //       secure: process.env.NODE_ENV === "production",
-  //       httpOnly: true,
-  //       sameSite: "lax" //For OAuth redirects
-  //     }
-  //   })
-  // );
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      store,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        sameSite: "lax" //For OAuth redirects
+      }
+    })
+  );
 
   //=======================
   //        ROUTES

@@ -1,10 +1,13 @@
 import axios from 'axios';
-import { google, Auth, batch_v1 } from 'googleapis';
+import { google, Auth } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
-import { request } from 'node:https';
+import { Types } from 'mongoose'
+import Email, { IEmail } from '../models/email.model'
+import { emailInfo } from '../types/email';
+
 
 google.options({
-  http2: true
+  http2: false
 })
 //========================================
 // Get a new Google Auth Client with required credentials
@@ -80,18 +83,106 @@ export async function processGoogleCode(code: string, client: OAuth2Client) {
   return { ...tokens, email }
 }
 
-export const getGmailApi = async (refresh_token: string, access_token: string) => {
+export const getGmailApi = async (refresh_token: string, projectId: Types.ObjectId) => {
+  //===============================
+  // Setup Google Auth
+  //===============================
   const auth_client = get_google_auth_client();
   auth_client.setCredentials({ refresh_token: refresh_token })
+  const { token } = await auth_client.getAccessToken()
+
+  //===========================================
+  // Setup gmail client and get list of emails
+  // to fetch
+  // WARN: Currently set to limit to 5 emails for testing purposes 
+  //
+  //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
-  const emails = await gmail.users.messages.list({ userId: 'me' })
-  const payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
-  console.time('timer');
-  const response = await batchGetEmails(payload.slice(0, 3), access_token)
-  console.log(response)
-  console.timeEnd('timer');
+  const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 5 })
+  let payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
+  const email_list: any[] = [];
+
+  //===========================================
+  // Since some requests fail we will do this
+  // in batches.  Any failed emails are
+  // appended to the end of our list of emails
+  // to get so they are tried again at the end.
+  // 
+  // TODO: Add an attempt limiter/timeout.
+  //
+  //===========================================
+  while (payload.length !== 0) {
+    let failed: any = []
+
+    //=========================================
+    // Each attempt is a promise so we can
+    // await it's execution.
+    //=========================================
+    const cycle = new Promise((resolve) => setTimeout(async () => {
+      //=======================================
+      // Size of the batch of request.
+      // Recommended size is < 100
+      //=======================================
+      const slice = payload.splice(0, 100)
+      //=======================================
+      // Get the batch response and cut up the 
+      // inidividual responses.
+      //=======================================
+      const response = await batchGetEmails(slice, token!)
+      const responses = response.data.split('--batch')
+      for (const i of responses) {
+        //=====================================
+        // Turn the http response into an Array
+        //=====================================
+        const clean = i.split('\r\n\r\n')[2]
+
+        if (clean !== undefined) {
+          //========================
+          // Extract important data
+          //========================
+          const { id, snippet, payload, internalDate } = JSON.parse(clean)
+
+          //============================
+          // If email was valid
+          // extract more important data
+          //============================
+          if (payload !== undefined) {
+            const from = payload.headers.find((x: any) => x.name === 'From').value
+            const subject = payload.headers.find((x: any) => x.name === 'Subject').value
+            const date = payload.headers.find((x: any) => x.name === 'Date').value
+            email_list.push({ mailBoxId: id, snippet, from, subject, projectId, date })
+          }
+          //==============================
+          // Otherwise request failed.
+          // This request will be retried
+          // at the end.
+          //==============================
+          if (id === undefined) {
+            console.log(clean)
+            failed.push(i.split('\r\n\r\n')[0].split('response-')[1])
+          }
+        }
+      }
+      //Exit the promise.
+      resolve('');
+    }, 1000))
+    //============================
+    // Do one attempted Batch then
+    // add the failed responses to
+    // the end of the list to 
+    // process
+    //============================
+    await cycle;
+    payload.push(...failed)
+  }
+  return email_list
 }
 
+//=========================================
+// This builds a multipart/mixed response
+// so we can send a batch of requests to
+// the gmail api.
+//=========================================
 const batchGetEmails = async (ids: any, access_token: string) => {
   const data: string[] = ids.map((x: any) => {
     return `--batch_foobarbaz\r\nContent-Type: application/http\r\nContent-ID: ${x}\r\n\r\nGET https://gmail.googleapis.com/gmail/v1/users/me/messages/${x} HTTP/1.1\r\n\r\n`

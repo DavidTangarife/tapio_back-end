@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { handleGoogleRedirect, loginWithGoogle } from "../controllers/google.controller";
+import { getEmailsByDate, handleGoogleRedirect, loginWithGoogle } from "../controllers/google.controller";
 
 const googleRouter = Router();
 
 googleRouter.get("/google-login", loginWithGoogle)
 googleRouter.get("/google-redirect", handleGoogleRedirect)
+googleRouter.post("/google-emails", getEmailsByDate)
 
 export default googleRouter

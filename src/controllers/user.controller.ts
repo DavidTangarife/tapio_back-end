@@ -5,8 +5,7 @@ import { ObjectId } from 'bson';
 export const handleUpdateUserName = async (req: Request, res: Response) :Promise<any> => {
   const {  fullName } = req.body;
   const userId = req.session.user_id;
-  console.log("🔥 PATCH /update-name hit");
-  console.log(userId);
+  // console.log(userId);
   if (!fullName) {
     return res.status(400).json({ error: "Full name is required." });
   }
@@ -35,7 +34,7 @@ export const handleGetUserName = async (req: Request, res: Response) :Promise<an
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json({ full_name: fullName });
+    return res.status(200).json({ fullName });
   } catch (error) {
     console.error("Error fetching user name:", error);
     return res.status(500).json({ error: "Internal server error" });

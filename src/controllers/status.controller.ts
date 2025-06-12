@@ -6,6 +6,7 @@ import {
 } from "../services/status.services";
 import { Types } from "mongoose";
 import { getOpportunitiesByProject } from "../services/opportunity.services";
+import Status from "../models/status.model"
 
 export const createStatusController = async (
   req: Request,
@@ -69,5 +70,20 @@ export const getKanbanController = async (
   } catch (err: any) {
     console.error("Error in getKanban:", err.message);
     res.status(500).json({ error: "Failed to load Kanban boards" });
+  }
+};
+
+/**
+ * Get the statuses for a project
+ */
+export const handleGetStatusesByProject = async (req: Request, res: Response): Promise<any> => {
+  const { projectId } = req.params;
+
+  try {
+    const statuses = await Status.find({ projectId });
+    return res.status(200).json(statuses);
+  } catch (err) {
+    console.error("Failed to fetch statuses", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

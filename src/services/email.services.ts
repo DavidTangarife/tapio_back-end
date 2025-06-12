@@ -10,6 +10,7 @@ import Project from "../models/project.model"
  * @parsedEmailArray: Array of email objects parsed from IMAP to save in DB.
  */
 export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void> {
+  console.log(parsedEmailArray);
   if (!Array.isArray(parsedEmailArray) || parsedEmailArray.length === 0) {
     console.warn("No emails to save.");
     return;
@@ -20,7 +21,7 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
   }));
 
   try {
-    await Email.insertMany(emailsToInsert, { ordered: false });
+    await Email.insertMany(emailsToInsert);
     console.log(`Inserted ${emailsToInsert.length} emails`);
   } catch (err: any) {
     if (err.writeErrors) {

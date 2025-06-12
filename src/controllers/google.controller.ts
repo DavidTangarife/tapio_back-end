@@ -35,7 +35,8 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
 }
 
 export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
-  {
+  
+    console.log(req.body);
     const query = parse(req.url || "", true).query;
     const user = req.session.user_id
 
@@ -44,8 +45,8 @@ export const getEmailsByDate = async (req: Request, res: Response, next: NextFun
     }
 
     const user_account = await getUserById(user)
-    const emails = await getGmailApi(user_account!.refresh_token || '', new Types.ObjectId(1))
+    const emails = await getGmailApi(user_account!.refresh_token || '', req.body.projectId)
     saveEmailsFromIMAP(emails)
     res.send(emails)
-  }
+  
 }

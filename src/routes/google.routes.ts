@@ -5,6 +5,6 @@ const googleRouter = Router();
 
 googleRouter.get("/google-login", loginWithGoogle)
 googleRouter.get("/google-redirect", handleGoogleRedirect)
-googleRouter.get("/google-emails", getEmailsByDate)
+googleRouter.post("/google-emails", getEmailsByDate)
 
 export default googleRouter

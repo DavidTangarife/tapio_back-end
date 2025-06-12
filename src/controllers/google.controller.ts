@@ -31,8 +31,7 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
 
   req.session.user_id = user[0]._id
   req.session.save();
-  const emails = await getGmailApi(userData.refresh_token, new Types.ObjectId(1))
-  res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1] + '\n\n' + JSON.stringify(emails))
+  res.send('User Logged in ' + user[0].email + ' and this user is ' + user[1])
 }
 
 export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {

@@ -5,7 +5,7 @@ import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
 import { findOrCreateUserFromGoogle, getUserById } from "../services/user.services";
 import { Types } from "mongoose";
-import { insertEmailsInBatches } from "../services/email.services";
+import { saveEmailsFromIMAP } from "../services/email.services";
 
 const google_client: OAuth2Client = get_google_auth_client('http://localhost:3000/api/google-redirect')
 
@@ -45,7 +45,7 @@ export const getEmailsByDate = async (req: Request, res: Response, next: NextFun
 
     const user_account = await getUserById(user)
     const emails = await getGmailApi(user_account!.refresh_token || '', new Types.ObjectId(1))
-    insertEmailsInBatches(emails)
+    saveEmailsFromIMAP(emails)
     res.send(emails)
   }
 }

@@ -40,6 +40,7 @@ export const handleMicrosoftRedirect = async (req: Request, res: Response, next:
   }
   const user = await findOrCreateUserFromMicrosoft(userData)
   req.session.user_id = user[0]._id
+  req.session.save()
   res.send('User Logged in ' + user[0]!.email + ' and this user is ' + user[1])
 };
 

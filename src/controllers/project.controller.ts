@@ -1,6 +1,6 @@
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 import { createProject, updateLastLogin } from '../services/project.services';
-import {ObjectId} from "bson"
+import { ObjectId } from "bson"
 
 
 export const createProjectController = async (req: Request, res: Response) => {
@@ -17,9 +17,11 @@ export const createProjectController = async (req: Request, res: Response) => {
       filters
     });
     // console.log("Request body:", req.body);
+    req.session.project_id = project._id
+    req.session.save()
 
     res.status(201).json(project);
-  } catch (err:any) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
@@ -27,7 +29,7 @@ export const createProjectController = async (req: Request, res: Response) => {
 /**
  * Controller to handle updating a project's lastLogin timestamp.
  */
-export const updateLastLoginController = async (req: Request, res: Response) : Promise<any> => {
+export const updateLastLoginController = async (req: Request, res: Response): Promise<any> => {
   try {
     const projectId = req.params.projectId;
     const project = await updateLastLogin(projectId);

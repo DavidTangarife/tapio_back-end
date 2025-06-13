@@ -2,6 +2,7 @@ import { Request, Response, Application } from "express";
 import mongoose from "mongoose";
 import createApp from "./app";
 import { config } from "dotenv";
+import { MongoClientOptions } from "mongodb";
 
 config();
 
@@ -16,17 +17,20 @@ if (!MONGO_URL) {
 }
 
 // Initialize the app
+console.time('Create App')
 const app: Application = createApp();
+console.timeEnd('Create App')
 const port = process.env.PORT || 3000;
 
-app.get("/", async function (req: Request, res: Response) {
+app.get("/", async function(req: Request, res: Response) {
   res.send(
     `Welcome to Tapio, I'd love to help but I'm an API! Please call me correctly`
   );
 });
 
+const MONGO_OPTIONS: MongoClientOptions = { connectTimeoutMS: 3600000, minPoolSize: 10 }
 
-mongoose.connect(MONGO_URL).then(() => {
+mongoose.connect(MONGO_URL, MONGO_OPTIONS).then(() => {
   console.log("MongoDB connected");
   app.listen(port, () => {
     console.log(

@@ -13,16 +13,26 @@ const session = require("express-session");
 const MongoDBStore = require('connect-mongodb-session')(session);
 
 export default function createApp(): Application {
+  console.time('Create App Func')
+  console.time('App')
   const app: Application = express();
+  console.timeEnd('App')
+  console.time('Store')
   const store = new MongoDBStore({
     uri: process.env.MONGO_URL,
     collection: 'sessions'
   })
+  console.timeEnd('Store')
+  console.time('Create App Func')
+  console.time('Cors')
   app.use(cors({
-    origin: "http://localhost:5173", 
+    origin: "http://localhost:5173",
     credentials: true,
   }));
+  console.timeEnd('Cors')
+  console.time('Json')
   app.use(express.json());
+  console.timeEnd('Json')
 
   //======================================================
   // The session middleware will be used to validate 
@@ -31,6 +41,7 @@ export default function createApp(): Application {
   // This variable is a 32 byte hex string and is 
   // sent to the oauth2 server.
   //======================================================
+  console.time('Session')
   app.use(
     session({
       secret: process.env.SESSION_SECRET,
@@ -44,10 +55,12 @@ export default function createApp(): Application {
       }
     })
   );
+  console.timeEnd('Session')
 
   //=======================
   //        ROUTES
   //=======================
+  console.time('Routes')
   app.use("/api", projectRoutes);
   app.use("/api", googleRouter)
   app.use("/api", microsoftRouter)
@@ -57,6 +70,7 @@ export default function createApp(): Application {
 
   app.use("/api", opportunityRoutes);
   app.use("/api", statusRoutes);
+  console.timeEnd('Routes')
   //===================================================
   // Error Handling Middleware
   //
@@ -64,6 +78,9 @@ export default function createApp(): Application {
   // Error middleware needs to be last in the chain.
   //
   //===================================================
+  console.time('Error Handler')
   app.use(errorHandler)
+  console.timeEnd('Error Handler')
+  console.timeEnd('Create App Func')
   return app;
 }

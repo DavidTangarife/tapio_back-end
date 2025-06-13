@@ -83,7 +83,7 @@ export async function processGoogleCode(code: string, client: OAuth2Client) {
   return { ...tokens, email }
 }
 
-export const getGmailApi = async (refresh_token: string, projectId: Types.ObjectId) => {
+export const getGmailApi = async (refresh_token: string, projectId: Types.ObjectId, date: Date) => {
   //===============================
   // Setup Google Auth
   //===============================
@@ -98,7 +98,10 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
   //
   //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
-  const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 5 })
+  const pre_date = date.setTime(date.getTime() - 86400000)
+  const query = `after:${pre_date.toString().substring(0, 10)}`
+  const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
+  console.log(emails)
   let payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
   const email_list: any[] = [];
 
@@ -140,7 +143,7 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
           //========================
           // Extract important data
           //========================
-          const { id, snippet, payload, internalDate } = JSON.parse(clean)
+          const { id, snippet, payload } = JSON.parse(clean)
 
           //============================
           // If email was valid

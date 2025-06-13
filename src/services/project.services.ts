@@ -1,4 +1,4 @@
-import Project, {IProject} from "../models/project.model"
+import Project, { IProject } from "../models/project.model"
 import { Types } from "mongoose";
 import Status from "../models/status.model"
 
@@ -10,8 +10,8 @@ interface CreateProjectInput {
 }
 /* Create and return a new project */
 export async function createProject(data: CreateProjectInput): Promise<IProject> {
-//  console.log("Inside createProject service, data:", data);
- const defaultStatuses = [
+  //  console.log("Inside createProject service, data:", data);
+  const defaultStatuses = [
     { title: "To review", order: 1 },
     { title: "Applied", order: 2 },
     { title: "Interviewing", order: 3 },
@@ -39,6 +39,11 @@ export async function createProject(data: CreateProjectInput): Promise<IProject>
 export async function getProjectByUserId(userId: string) {
   return await Project.findByUserId(new Types.ObjectId(userId));
 }
+
+/* Get project from id */
+export async function getProjectById(_id: string): Promise<IProject | null> {
+  return await Project.findOne({ _id });
+};
 
 // export async function updateProjectFilters(projectId: string, filters: { keywords: string[]; senders: string[] }) {
 //   const project = await Project.findById(projectId);

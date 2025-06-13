@@ -52,7 +52,7 @@ export const handleGoogleRedirect = async (
 
   req.session.user_id = user[0]._id;
   req.session.save();
-  res.send("User Logged in " + user[0].email + " and this user is " + user[1]);
+  res.redirect("http://localhost:5173/setup");
 };
 
 export const getEmailsByDate = async (
@@ -67,12 +67,10 @@ export const getEmailsByDate = async (
   if (!user) {
     res.redirect("/google-login");
   }
-
   const user_account = await getUserById(user);
   const emails = await getGmailApi(
     user_account!.refresh_token || "",
     req.body.projectId
   );
   saveEmailsFromIMAP(emails);
-  res.redirect("http://localhost:5173/setup");
 };

@@ -23,7 +23,6 @@ export default function createApp(): Application {
     collection: 'sessions'
   })
   console.timeEnd('Store')
-  console.time('Create App Func')
   console.time('Cors')
   app.use(cors({
     origin: "http://localhost:5173",

@@ -46,8 +46,7 @@ export const handleMicrosoftRedirect = async (req: Request, res: Response, next:
   res.redirect("http://localhost:5173/setup");
 };
 
-export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
-  const query = parse(req.url || "", true).query;
+export const getMicrosoftEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.session.user_id
   const project_id = req.session.project_id;
 
@@ -62,10 +61,12 @@ export const getEmailsByDate = async (req: Request, res: Response, next: NextFun
   const user_data = await silentlyRefreshToken(user_account!.token_cache || '')
   const project = await getProjectById(project_id)
   //const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
-  const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(project!.startDate))
+  const predate: any = project!.startDate
+  const date = new Date(predate - (Math.abs(project!.startDate.getTimezoneOffset() * 60000) * 2))
+  const emails: AxiosResponse = await getEmailsFromDate(user_data, date)
   if (emails.status == 200) {
     const email_objects = emails.data.value.map((x: any) => {
-      return { mailBoxid: x.id, subject: x.subject, snippet: x.bodyPreview, date: x.createdDateTime, from: x.from.emailAddress.address }
+      return { mailBoxid: x.id, subject: x.subject, snippet: x.bodyPreview, date: x.createdDateTime, from: x.from.emailAddress.address, projectId: project!._id }
     })
     saveEmailsFromIMAP(email_objects)
   } else {

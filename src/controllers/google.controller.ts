@@ -52,7 +52,7 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   res.redirect("http://localhost:5173/setup");
 };
 
-export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
+export const getGoogleEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
   const user_id = req.session.user_id;
   const project_id = req.session.project_id;
 

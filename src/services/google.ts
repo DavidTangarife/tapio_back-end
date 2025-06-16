@@ -98,7 +98,7 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
   //
   //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
-  const pre_date = date.setTime(date.getTime() - 86400000)
+  const pre_date = date.setTime(date.getTime() - (Math.abs(date.getTimezoneOffset() * 60000)))
   const query = `after:${pre_date.toString().substring(0, 10)}`
   const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
   console.log(emails)

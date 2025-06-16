@@ -1,10 +1,12 @@
-import mongoose, { Schema, model, Document, Model } from "mongoose";
+import { Schema, model, Document, Model } from "mongoose";
+import { Types } from "mongoose";
 
 export interface IUser extends Document {
   fullName?: string;
   email: string;
   refresh_token?: string;
-  token_cache?: string
+  token_cache?: string;
+  last_project_id?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 
@@ -27,6 +29,9 @@ const userSchema = new Schema<IUser>({
   },
   token_cache: {
     type: String,
+  },
+  last_project_id: {
+    type: Schema.Types.ObjectId, ref: "Project",
   }
 }, {
   timestamps: true

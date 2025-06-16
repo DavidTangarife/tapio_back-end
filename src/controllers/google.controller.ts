@@ -73,4 +73,5 @@ export const getEmailsByDate = async (
     req.body.projectId
   );
   saveEmailsFromIMAP(emails);
+  res.status(201).json(emails)
 };

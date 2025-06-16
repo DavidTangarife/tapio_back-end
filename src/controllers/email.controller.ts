@@ -90,8 +90,11 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
 
 export const fetchFilteredEmails = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
-
+    const {projectId} = req.params;
+    // const projectId = req.session.project_id;
+    // if (!projectId) {
+    //   return res.status(404).json({ error: "There is no project in session" });
+    // }
     const emails = await getFilteredEmails(projectId);
     console.log(emails)
     res.status(200).json(emails);

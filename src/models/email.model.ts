@@ -33,7 +33,7 @@ interface IEmailModel extends Model<IEmail> {
 const emailSchema = new Schema<IEmail>({
   projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
   // opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
-  mailBoxId: { type: String },
+  mailBoxId: { type: String, unique: [true, 'Email must be unique'] },
   subject: { type: String },
   snippet: { type: String, required: true },
   from: { type: String, required: true },

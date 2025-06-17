@@ -11,6 +11,7 @@ import {
 import { get_imap_connection, sender_and_subject_since_date_callback } from "../services/imap";
 import { Types } from "mongoose";
 import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
+import { error } from "node:console";
 // import { getEmailsByProject } from "../services/email.services";
 
 // export const saveEmail = async (req: Request, res: Response) => {
@@ -141,5 +142,47 @@ export async function getInboxEmails(req: Request, res: Response): Promise<void>
   } catch (error: any) {
     console.error("Error in getInboxEmails:", error);
     res.status(500).json({ error: "Server error" });
+  }
+}
+
+/**
+ * Controller to update tap-in property of email object
+ * used inside the emailItem component in frontend 
+ */
+export async function updateTapIn(req:Request, res: Response): Promise<any> {
+  const {isTapped} = req.body;
+  const emailId = req.params.emailId
+  
+  try {
+    const email = await Email.findById(emailId);
+    if (!email) return res.status(404).json({error: "Email not found"});
+
+    email.isTapped = isTapped;
+    await email.save();
+    res.json(email);
+  } catch (err) {
+    console.error("Error updating email:", err);
+    res.status(500).json({ error: "Failed to update email"})
+  }
+}
+
+/**
+ * Controller to update isRead property of email object
+ * used inside the emailItem component in frontend 
+ */
+export async function updateIsRead(req: Request, res: Response): Promise<any> {
+  const { emailId } = req.body;
+
+  try {
+    const email = await Email.findById(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    email.isRead = true;
+    await email.save();
+
+    res.json(email);
+  } catch (err) {
+    console.error("Failed to mark email as read:", err);
+    res.status(500).json({ error: "Failed to mark email as read" });
   }
 }

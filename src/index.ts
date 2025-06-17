@@ -17,9 +17,7 @@ if (!MONGO_URL) {
 }
 
 // Initialize the app
-console.time('Create App')
 const app: Application = createApp();
-console.timeEnd('Create App')
 const port = process.env.PORT || 3000;
 
 app.get("/", async function(req: Request, res: Response) {
@@ -28,9 +26,7 @@ app.get("/", async function(req: Request, res: Response) {
   );
 });
 
-const MONGO_OPTIONS: MongoClientOptions = { connectTimeoutMS: 3600000, minPoolSize: 10 }
-
-mongoose.connect(MONGO_URL, MONGO_OPTIONS).then(() => {
+mongoose.connect(MONGO_URL).then(() => {
   console.log("MongoDB connected");
   app.listen(port, () => {
     console.log(

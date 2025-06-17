@@ -20,9 +20,46 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
     createdAt: new Date(),
   }));
 
+  const projectId = emailsToInsert[0]?.projectId;
+
+  if (!projectId) {
+    console.error("Missing projectId in email data");
+    return;
+  }
+
   try {
     await Email.insertMany(emailsToInsert);
     console.log(`Inserted ${emailsToInsert.length} emails`);
+    
+    const project = await Project.findById(projectId);
+    if (!project) {
+      console.error("Project not found");
+      return;
+    }
+
+     // Extract only email addresses (e.g., 'no-reply@x.com')
+    const rawSenders = emailsToInsert.map(email => {
+      const from = email.from;
+      if (typeof from === 'string') {
+        return extractEmailAddress(from);
+      } else if (from?.value?.[0]?.address) {
+        return from.value[0].address.trim(); // handle object format
+      } else {
+        return '';
+      }
+    }).filter(Boolean); // remove empty strings
+
+    const uniqueNewSenders = [...new Set(rawSenders)];
+    const existingFilters = project.filters ?? [];
+
+    // Merge unique values
+    const combined = [...new Set([...existingFilters, ...uniqueNewSenders])];
+    project.filters = combined;
+
+    await project.save();
+    console.log("Project filters updated with new senders.");
+    
+    
   } catch (err: any) {
     if (err.writeErrors) {
       console.warn(`${err.writeErrors.length} emails failed. Retrying individually...`);
@@ -61,16 +98,84 @@ function escapeRegex(string: string) {
 function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
   const filter: any = {};
 
-  if (include?.length) {
-    filter.$regex = include.map(escapeRegex).join("|");
-    filter.$options = "i";
+   if (include?.length) {
+    const includePattern = include.map(escapeRegex).join("|");
+    filter.$regex = new RegExp(includePattern, "i");
   }
 
   if (exclude?.length) {
-    filter.$not = new RegExp(exclude.map(escapeRegex).join("|"), "i");
+    const excludePattern = exclude.map(escapeRegex).join("|");
+    filter.$not = new RegExp(excludePattern, "i");
   }
 
   return Object.keys(filter).length ? filter : null;
+}
+
+/**
+ * Extracts just the email address from a "name <email>" format.
+ * If no angle brackets are found, trims and returns the original string.
+ */
+function extractEmailAddress(from: string): string {
+  const match = from.match(/<(.+)>/);
+  return match ? match[1] : from.trim();
+}
+
+/**
+ * Fetches a list of unique email senders from a project's emails.
+ * Each sender includes one sample email, the original `from` string, subject, and date.
+ * Also determines if the sender is blocked (not present in the project's filters).
+ *
+ * @param projectId - The ID of the project whose emails are being analyzed
+ * @returns Array of sender summaries, each representing one unique sender
+ * @throws Error if the project does not exist
+ */
+export async function getFilterableEmails(projectId: string | Types.ObjectId) {
+  const project = await Project.findById(projectId);
+  if (!project) throw new Error("Project not found");
+
+  const filters = project.filters || [];
+
+  const emails = await Email.find({ projectId }).sort({ date: -1 });
+
+  const uniqueSendersMap = new Map();
+
+  emails.forEach(email => {
+    const plainEmail = extractEmailAddress(email.from);
+    if (!uniqueSendersMap.has(plainEmail)) {
+      uniqueSendersMap.set(plainEmail, {
+        _id: email._id,
+        from: email.from,
+        subject: email.subject,
+        date: email.date,
+        isBlocked: !filters.includes(plainEmail)
+      });
+    }
+  });
+
+  return Array.from(uniqueSendersMap.values());
+}
+
+/**
+ * Fetches inbox emails for a given project based on its filters.
+ * Only emails from allowed senders (filters) are returned.
+ * @param projectId - The ID of the project whose emails to fetch.
+ * @returns Filtered list of emails considered part of the inbox.
+ */
+export async function fetchInboxEmails(projectId: string) {
+  const project = await Project.findById(projectId);
+  if (!project) throw new Error("Project not found");
+
+  const filters = project.filters || [];
+  if (!filters.length) return [];
+
+  const emails = await Email.find({ projectId }).sort({ date: -1 });
+
+  const inboxEmails = emails.filter(email => {
+    const fromEmail = extractEmailAddress(email.from);
+    return filters.includes(fromEmail);
+  });
+
+  return inboxEmails;
 }
 
 /**
@@ -78,48 +183,32 @@ function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
  * Filters include matching subject keywords and sender email patterns.
  * Currently hardcoded for testing with a specific project ID.
  */
-export async function getFilteredEmails(project_id: string) {
-  const projectId = new Types.ObjectId(project_id);
+// export async function getFilteredEmails(project_id: string) {
+//   const projectId = new Types.ObjectId(project_id);
   
-  const project = await Project.findById(projectId);
-  if (!project) throw new Error("Project not found");
+//   const project = await Project.findById(projectId);
+//   if (!project) throw new Error("Project not found");
 
-  const { filters, blockedFilters, startDate } = project;
+//   const { filters, startDate } = project;
 
-  // Find the latest email already saved for this project
-  const latestEmail = await Email.findOne({ projectId }).sort({ mailBoxId: -1 });
-  // const dateThreshold = latestEmail && latestEmail.date
-  //   ? latestEmail.date
-  //   : startDate;
+//   // Find the latest email already saved for this project
+//   const latestEmail = await Email.findOne({ projectId }).sort({ mailBoxId: -1 });
+//   // const dateThreshold = latestEmail && latestEmail.date
+//   //   ? latestEmail.date
+//   //   : startDate;
 
-  // Create a base query object to match emails for this project
-  const query: any = {
-    projectId,
-    // date: { $gt: dateThreshold },
-    $and: []
-  };
-  const subjectFilter = buildRegexFilter(filters?.keywords, blockedFilters?.keywords);
-  if (subjectFilter) query.$and.push({ subject: subjectFilter });
+//   // Create a base query object to match emails for this project
+//   const query: any = {
+//     projectId,
+//     // date: { $gt: dateThreshold },
+//   };
 
-  // Build sender filter (includes + excludes)
-  const fromFilter = buildRegexFilter(filters?.senders, blockedFilters?.senders);
-  if (fromFilter) query.$and.push({ from: fromFilter });
-
-  // If no $and filters were added, remove the property
-  if (!query.$and.length) delete query.$and;
-  
-  return await Email.find(query).sort({ mailBoxId: -1 });
-}
-
-// {
-//   projectId: new ObjectId("682efb5211da37c9c95e0779"),
-//   date: { $gte: 2024-05-15T00:00:00.000Z },
-//   subject: {
-//     $regex: "mentoring|vision",
-//     $options: "i"
-//   },
-//   from: {
-//     $regex: "info@mentorloop\\.com|careers@example\\.com",
-//     $options: "i"
+//   // Build sender filter (includes + excludes)
+//   const senderFilter = buildRegexFilter(filters);
+//   if (senderFilter) {
+//     query.from = senderFilter;
 //   }
+  
+//   return await Email.find(query).sort({ date: -1 });
 // }
+

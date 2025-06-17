@@ -2,7 +2,12 @@ import Email from "../models/email.model";
 import Project from "../models/project.model";
 import User from "../models/user.model"
 import {Request, Response} from 'express';
-import {getFilteredEmails, saveEmailsFromIMAP} from "../services/email.services"
+import {
+  fetchInboxEmails,
+  getFilterableEmails,
+  // getFilteredEmails,
+   saveEmailsFromIMAP
+  } from "../services/email.services"
 import { get_imap_connection, sender_and_subject_since_date_callback } from "../services/imap";
 import { Types } from "mongoose";
 import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
@@ -88,18 +93,53 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
   }
 };
 
-export const fetchFilteredEmails = async (req: Request, res: Response) => {
+// export const fetchFilteredEmails = async (req: Request, res: Response) => {
+//   try {
+//     const {projectId} = req.params;
+//     // const projectId = req.session.project_id;
+//     // if (!projectId) {
+//     //   return res.status(404).json({ error: "There is no project in session" });
+//     // }
+//     const emails = await getFilteredEmails(projectId);
+//     console.log(emails)
+//     res.status(200).json(emails);
+//   } catch (err: any) {
+//     console.error("Failed to get filtered emails:", err.message);
+//     res.status(500).json({ error: "Failed to get emails." });
+//   }
+// };
+
+/**
+ * Controller to return a summary list of email senders for filtering.
+ * Responds with an array of senders, each showing one sample email and block status.
+ *
+ * @route GET /api/projects/:projectId/filter-senders
+ */
+export async function getEmailsForFiltering(req: Request, res: Response): Promise<any> {
   try {
-    const {projectId} = req.params;
-    // const projectId = req.session.project_id;
-    // if (!projectId) {
-    //   return res.status(404).json({ error: "There is no project in session" });
-    // }
-    const emails = await getFilteredEmails(projectId);
-    console.log(emails)
-    res.status(200).json(emails);
-  } catch (err: any) {
-    console.error("Failed to get filtered emails:", err.message);
-    res.status(500).json({ error: "Failed to get emails." });
+    const { projectId } = req.params;
+    const senders = await getFilterableEmails(projectId);
+
+    res.status(200).json(senders);
+  } catch (error) {
+    console.error("Error in getEmailsForFiltering:", error);
+    res.status(500).json({ error: "Server error" });
   }
-};
+}
+
+
+/**
+ * Controller to handle inbox email requests.
+ * Responds with filtered emails that match the project's allowed sender list.
+ */
+export async function getInboxEmails(req: Request, res: Response): Promise<void> {
+  const { projectId } = req.params;
+
+  try {
+    const inboxEmails = await fetchInboxEmails(projectId);
+    res.json(inboxEmails);
+  } catch (error: any) {
+    console.error("Error in getInboxEmails:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+}

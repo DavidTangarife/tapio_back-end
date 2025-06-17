@@ -1,13 +1,11 @@
-import {Request, Response} from 'express';
-import { createProject, updateLastLogin } from '../services/project.services';
-import {ObjectId} from "bson"
+import { Request, Response } from 'express';
+import { createProject, updateLastLogin, updateProject } from '../services/project.services';
+
 
 
 export const createProjectController = async (req: Request, res: Response) => {
   const { name, startDate, filters } = req.body;
   const userId = req.session.user_id;
-  // console.log(userId)
-  // console.log("Request body:", req.body);
 
   try {
     const project = await createProject({
@@ -16,7 +14,6 @@ export const createProjectController = async (req: Request, res: Response) => {
       startDate: new Date(startDate),
       filters
     });
-    // console.log("Request body:", req.body);
 
     res.status(201).json(project);
   } catch (err:any) {
@@ -39,5 +36,33 @@ export const updateLastLoginController = async (req: Request, res: Response) : P
     res.json({ message: "lastLogin updated", project });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
+  }
+}
+
+
+/**
+ * Controller to update the filters array of a specific project.
+ * 
+ * Expects a project ID in the route parameters and a `filters` array in the request body.
+ * Validates that the `filters` field is an array of strings before updating the project.
+ *
+ * @route PATCH /api/projects/:projectId/filters
+ * @param req - Express request object containing projectId and filters
+ * @param res - Express response object
+ * @returns The updated project document or an appropriate error response
+ */
+export const updateProjectFilters= async(req: Request, res: Response): Promise<any> => {
+  const { projectId } = req.params;
+  const { filters } = req.body;
+
+  if (!Array.isArray(filters)) {
+    return res.status(400).json({ error: "Filters must be an array of strings." });
+  }
+  try {
+    const updatedProject = await updateProject(projectId, { filters });
+    return res.json(updatedProject);
+  } catch (err: any) {
+    console.error("Error updating project filters:", err);
+    return res.status(500).json({ error: "Failed to update filters." });
   }
 }

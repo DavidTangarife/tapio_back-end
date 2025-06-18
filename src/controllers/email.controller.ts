@@ -5,47 +5,15 @@ import {Request, Response} from 'express';
 import {
   fetchInboxEmails,
   getFilterableEmails,
-  // getFilteredEmails,
-   saveEmailsFromIMAP
+  saveEmailsFromIMAP
   } from "../services/email.services"
 import { get_imap_connection, sender_and_subject_since_date_callback } from "../services/imap";
 import { Types } from "mongoose";
 import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
-import { error } from "node:console";
-// import { getEmailsByProject } from "../services/email.services";
+import { get_google_auth_client } from "../services/google";
+import { google } from "googleapis";
+import { getUserById } from "../services/user.services";
 
-// export const saveEmail = async (req: Request, res: Response) => {
-//   const { mailBoxId,
-//       subject,
-//       from
-//       } = req.body;
-
-//   try{
-
-//     const newEmail = new Email({
-//       projectId: "682efb5211da37c9c95e0779",
-//       mailBoxId,
-//       subject,
-//       from
-//     });
-
-//     const savedEmail = await newEmail.save();
-//     res.status(201).json(savedEmail);
-//   } catch (error) {
-//     console.error("Error saving email:", error);
-//     res.status(500).json({ error: "Failed to save email" });
-//   }
-// };
-
-// export const getEmailByProjectId = async (req: Request, res: Response) => {
-//   try {
-//     const emails: any = await getEmailsByProject("682efb5211da37c9c95e0779");
-//     res.status(200).json(emails);
-//   } catch (err) {
-//     console.error("Failed to fetch emails:", err);
-//     res.status(500).json({ message: "Server error while fetching emails" });
-//   }
-// }
 
 export const fetchEmailsController = async (req: Request, res: Response) : Promise<any> => {
   console.log('fetchEmailsController called')
@@ -94,22 +62,6 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
   }
 };
 
-// export const fetchFilteredEmails = async (req: Request, res: Response) => {
-//   try {
-//     const {projectId} = req.params;
-//     // const projectId = req.session.project_id;
-//     // if (!projectId) {
-//     //   return res.status(404).json({ error: "There is no project in session" });
-//     // }
-//     const emails = await getFilteredEmails(projectId);
-//     console.log(emails)
-//     res.status(200).json(emails);
-//   } catch (err: any) {
-//     console.error("Failed to get filtered emails:", err.message);
-//     res.status(500).json({ error: "Failed to get emails." });
-//   }
-// };
-
 /**
  * Controller to return a summary list of email senders for filtering.
  * Responds with an array of senders, each showing one sample email and block status.
@@ -147,7 +99,13 @@ export async function getInboxEmails(req: Request, res: Response): Promise<void>
 
 /**
  * Controller to update tap-in property of email object
- * used inside the emailItem component in frontend 
+ * used inside the emailItem component in frontend
+ * 
+ * @route PATCH /api/emails/:emailId/tap
+ * @param req - Express request object containing: `emailId` in `req.params`and
+ *              `isTapped` boolean in `req.body`
+ * @param res - Express response object used to send the updated email or error.
+ * @returns  Returns JSON with the updated email object if successful,  or an error message
  */
 export async function updateTapIn(req:Request, res: Response): Promise<any> {
   const {isTapped} = req.body;
@@ -167,8 +125,13 @@ export async function updateTapIn(req:Request, res: Response): Promise<any> {
 }
 
 /**
- * Controller to update isRead property of email object
- * used inside the emailItem component in frontend 
+ * Controller to update the `isRead` property of an email object to true.
+ * used inside the emailItem component in frontend
+ * 
+ * @route PATCH /api/emails/:emailId/read
+ * @param req - Express request object containing the email ID in `req.params`.
+ * @param res - Express response object used to send the updated email or error.
+ * @returns  Returns JSON with the updated email object if successful, or anerror message
  */
 export async function updateIsRead(req: Request, res: Response): Promise<any> {
   const { emailId } = req.body;
@@ -181,6 +144,96 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
     await email.save();
 
     res.json(email);
+  } catch (err) {
+    console.error("Failed to mark email as read:", err);
+    res.status(500).json({ error: "Failed to mark email as read" });
+  }
+}
+
+/**
+ * Controller to get email body for a specific emaildid.
+ * 
+ * @route  GET /api/emails/emailid/body
+ * @param req - Express request object containing emaiId
+ * @param res - Express response object
+ * @returns  decoded html email body or an appropriate error response
+ */
+export async function getEmailBody( req: Request, res: Response ): Promise<any> {
+  try {
+    const { emailId } = req.params;
+    const userId = req.session.user_id;
+
+    const email = await Email.findById(emailId);
+    if(!email) return res.status(404).json({ error: "Email not found" });
+    const mailId = email.mailBoxId
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Get user info from DB
+    const user_account = await getUserById(userId);
+    const refreshToken = user_account?.refresh_token;
+
+    if (!refreshToken) {
+      return res.status(403).json({ error: 'No refresh token available' });
+    }
+
+    // Create an authorized Gmail client
+    const authClient = get_google_auth_client();
+    authClient.setCredentials({ refresh_token: refreshToken });
+
+    const gmail = google.gmail({ version: 'v1', auth: authClient });
+
+    // Fetch the full email message by ID
+    const gmailRes = await gmail.users.messages.get({
+      userId: 'me',
+      id: mailId,
+      format: 'full',
+    });
+
+    const payload = gmailRes.data.payload;
+
+    // Try to get the html body
+    const part = payload?.parts?.find(
+      (part) => part.mimeType === 'text/html'
+    ) || payload;
+
+    const bodyData = part?.body?.data;
+
+    if (!bodyData) {
+      return res.status(404).json({ error: 'No body found in this email' });
+    }
+
+    // Decode Base64
+    const decodedBody = Buffer.from(bodyData, 'base64').toString('utf-8');
+
+    return res.status(200).json({ body: decodedBody });
+  } catch (err) {
+    console.error('Failed to get email body:', err);
+    return res.status(500).json({ error: 'Failed to get email body' });
+  }
+};
+
+
+
+/**
+ * Controller to get specific email data from database and return email object
+ * used inside the viewEmail component in frontend
+ * 
+ * @route GET /api/emails/:emailid
+ * @param req - Express request object containing the email ID in `req.params`.
+ * @param res - Express response object used to return the email data or an error.
+ * @returns  Returns a JSON response with the email object if found, 
+ *           or an error message if not found or on failure.
+ */
+export async function getEmailData(req: Request, res: Response): Promise<any> {
+  const { emailId } = req.params;
+  try {
+    const email = await Email.findById(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    return res.json(email);
   } catch (err) {
     console.error("Failed to mark email as read:", err);
     res.status(500).json({ error: "Failed to mark email as read" });

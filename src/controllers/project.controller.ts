@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
-import { createProject, updateLastLogin, updateProject } from '../services/project.services';
+import {
+  createProject,
+  getProjectByUserId,
+  updateLastLogin,
+  updateProject 
+} from '../services/project.services';
 
 
 
@@ -21,6 +26,26 @@ export const createProjectController = async (req: Request, res: Response) => {
   }
 };
 
+export const handleGetProjectsByUserId = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const projects = await getProjectByUserId(userId);
+    if (!projects) {
+      return res.status(404).json({ error: "No projects found" });
+    }
+    return res.status(200).json({ projects });
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 /**
  * Controller to handle updating a project's lastLogin timestamp.
  */
@@ -38,7 +63,6 @@ export const updateLastLoginController = async (req: Request, res: Response) : P
     res.status(500).json({ message: "Server error", error: err });
   }
 }
-
 
 /**
  * Controller to update the filters array of a specific project.

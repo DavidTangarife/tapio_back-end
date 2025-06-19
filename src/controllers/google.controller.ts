@@ -65,7 +65,7 @@ export const getEmailsByDate = async (
   const user = req.session.user_id;
 
   if (!user) {
-    res.redirect("/google-login");
+    res.redirect("/google-login"); // TODO: change the location of this to frontend
   }
   const user_account = await getUserById(user);
   const emails = await getGmailApi(

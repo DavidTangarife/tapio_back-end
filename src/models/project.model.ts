@@ -39,7 +39,7 @@ const projectSchema = new Schema<IProject>({
 
 // static method
 projectSchema.statics.findByUserId = function (userId: string | Types.ObjectId) {
-  return this.findOne({ userId });
+  return this.find({ userId });
 };
 
 /* Validation before storing in database */

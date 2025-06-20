@@ -3,11 +3,10 @@ import Project from "../models/project.model";
 import User from "../models/user.model"
 
 import { NextFunction, Request, Response } from 'express';
-import { fetchInboxEmails, getFilterableEmails, getFilteredEmails, saveEmailsFromIMAP } from "../services/email.services"
+import { fetchInboxEmails, getFilterableEmails, saveEmailsFromIMAP } from "../services/email.services"
 import { get_imap_connection, sender_and_subject_since_date_callback } from "../services/imap";
 import { Types } from "mongoose";
 import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
-import { getUserById } from "../services/user.services";
 import { getGoogleEmailsByDate } from "./google.controller";
 import { getMicrosoftEmailsByDate } from "./microsoft.controller";
 import { get_google_auth_client } from "../services/google";
@@ -68,7 +67,7 @@ export const fetchEmailsController = async (req: Request, res: Response): Promis
  * @route GET /api/projects/:projectId/filter-senders
  */
 export async function getEmailsForFiltering(req: Request, res: Response): Promise<any> {
-  try {    
+  try {
     const project_id = req.session.project_id;
     const senders = await getFilterableEmails(project_id);
 
@@ -96,7 +95,7 @@ export const directEmails = async (req: Request, res: Response, next: NextFuncti
   } catch (err: any) {
     next(err)
   }
-
+}
 /**
  * Controller to handle inbox email requests.
  * Responds with filtered emails that match the project's allowed sender list.
@@ -114,30 +113,30 @@ export async function getInboxEmails(req: Request, res: Response): Promise<void>
 }
 
 
-  /**
- * Controller to update tap-in property of email object
- * used inside the emailItem component in frontend
- * 
- * @route PATCH /api/emails/:emailId/tap
- * @param req - Express request object containing: `emailId` in `req.params`and
- *              `isTapped` boolean in `req.body`
- * @param res - Express response object used to send the updated email or error.
- * @returns  Returns JSON with the updated email object if successful,  or an error message
- */
-export async function updateTapIn(req:Request, res: Response): Promise<any> {
-  const {isTapped} = req.body;
+/**
+* Controller to update tap-in property of email object
+* used inside the emailItem component in frontend
+* 
+* @route PATCH /api/emails/:emailId/tap
+* @param req - Express request object containing: `emailId` in `req.params`and
+*              `isTapped` boolean in `req.body`
+* @param res - Express response object used to send the updated email or error.
+* @returns  Returns JSON with the updated email object if successful,  or an error message
+*/
+export async function updateTapIn(req: Request, res: Response): Promise<any> {
+  const { isTapped } = req.body;
   const emailId = req.params.emailId
-  
+
   try {
     const email = await Email.findById(emailId);
-    if (!email) return res.status(404).json({error: "Email not found"});
+    if (!email) return res.status(404).json({ error: "Email not found" });
 
     email.isTapped = isTapped;
     await email.save();
     res.json(email);
   } catch (err) {
     console.error("Error updating email:", err);
-    res.status(500).json({ error: "Failed to update email"})
+    res.status(500).json({ error: "Failed to update email" })
   }
 }
 
@@ -175,13 +174,13 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
  * @param res - Express response object
  * @returns  decoded html email body or an appropriate error response
  */
-export async function getEmailBody( req: Request, res: Response ): Promise<any> {
+export async function getEmailBody(req: Request, res: Response): Promise<any> {
   try {
     const { emailId } = req.params;
     const userId = req.session.user_id;
 
     const email = await Email.findById(emailId);
-    if(!email) return res.status(404).json({ error: "Email not found" });
+    if (!email) return res.status(404).json({ error: "Email not found" });
     const mailId = email.mailBoxId
 
     if (!userId) {

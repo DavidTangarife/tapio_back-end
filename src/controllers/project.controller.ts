@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { onboardUser } from '../services/user.services';
-import { getFilteredEmails } from '../services/email.services';
 import {
   createProject,
   getProjectByUserId,
   updateLastLogin,
-  updateProject 
+  updateProject
 } from '../services/project.services';
+import { getFilterableEmails } from '../services/email.services';
 
 
 
@@ -39,7 +39,7 @@ export const getProjectEmails = async (req: Request, res: Response, next: NextFu
   if (!projectId) {
     res.status(404).json({ error: 'No Project Found' })
   }
-  const emails = await getFilteredEmails(projectId)
+  const emails = await getFilterableEmails(projectId)
   res.status(200).json({ emails })
 }
 
@@ -92,7 +92,7 @@ export const updateLastLoginController = async (req: Request, res: Response): Pr
  * @param res - Express response object
  * @returns The updated project document or an appropriate error response
  */
-export const updateProjectFilters= async(req: Request, res: Response): Promise<any> => {
+export const updateProjectFilters = async (req: Request, res: Response): Promise<any> => {
   const { projectId } = req.params;
   const { filters } = req.body;
 

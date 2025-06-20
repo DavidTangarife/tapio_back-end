@@ -55,7 +55,7 @@ export const getKanbanController = async (
 
   try {
     const statuses = await getStatusesByProject(projectId);
-    const opportunities = await getOpportunitiesByProject(projectId);
+    const opportunities = await getOpportunitiesByProject(objectProjectId);
 
     // Group opportunities under their status
     const kanbanData = statuses.map((status) => {

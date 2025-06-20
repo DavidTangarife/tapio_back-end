@@ -66,7 +66,7 @@ export async function handleGoogleAuth(
   }
 }
 
-export const checkForUser = async (req: Request, res: Response, next: NextFunction) => {
+export const checkForUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   const userId = req.session.user_id
 
   if (!userId) {

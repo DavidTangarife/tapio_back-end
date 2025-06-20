@@ -93,7 +93,7 @@ export const updateLastLoginController = async (req: Request, res: Response): Pr
  * @returns The updated project document or an appropriate error response
  */
 export const updateProjectFilters = async (req: Request, res: Response): Promise<any> => {
-  const { projectId } = req.params;
+  const projectId = req.session.project_id
   const { filters } = req.body;
 
   if (!Array.isArray(filters)) {

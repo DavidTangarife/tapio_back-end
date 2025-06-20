@@ -101,11 +101,12 @@ export const directEmails = async (req: Request, res: Response, next: NextFuncti
  * Responds with filtered emails that match the project's allowed sender list.
  */
 export async function getInboxEmails(req: Request, res: Response): Promise<void> {
-  const { projectId } = req.params;
+  const projectId = req.session.project_id;
 
   try {
     const inboxEmails = await fetchInboxEmails(projectId);
-    res.json(inboxEmails);
+    console.log(inboxEmails)
+    res.json({ emails: inboxEmails });
   } catch (error: any) {
     console.error("Error in getInboxEmails:", error);
     res.status(500).json({ error: "Server error" });

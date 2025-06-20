@@ -41,7 +41,7 @@ export const handleMicrosoftRedirect = async (req: Request, res: Response, next:
     next(error)
   }
   const user = await findOrCreateUserFromMicrosoft(userData)
-  req.session.user_id = user[0]._id
+  req.session.user_id = user._id
   req.session.save()
   res.redirect("http://localhost:5173/setup");
 };

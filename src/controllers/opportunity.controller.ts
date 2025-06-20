@@ -11,7 +11,8 @@ export const createOpportunityController = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { projectId, statusId, title, company } = req.body;
+  const { statusId, title, company } = req.body;
+  const projectId = req.session.project_id
   if (!projectId || !statusId || !title || !company?.name) {
     return res.status(400).json({ error: "Missing required fields." });
   }

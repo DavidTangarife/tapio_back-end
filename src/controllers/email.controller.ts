@@ -1,36 +1,35 @@
 import Email from "../models/email.model";
 import Project from "../models/project.model";
 import User from "../models/user.model"
-import {Request, Response} from 'express';
-import {
-  fetchInboxEmails,
-  getFilterableEmails,
-  saveEmailsFromIMAP
-  } from "../services/email.services"
+
+import { NextFunction, Request, Response } from 'express';
+import { fetchInboxEmails, getFilterableEmails, getFilteredEmails, saveEmailsFromIMAP } from "../services/email.services"
 import { get_imap_connection, sender_and_subject_since_date_callback } from "../services/imap";
 import { Types } from "mongoose";
 import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
+import { getUserById } from "../services/user.services";
+import { getGoogleEmailsByDate } from "./google.controller";
+import { getMicrosoftEmailsByDate } from "./microsoft.controller";
 import { get_google_auth_client } from "../services/google";
 import { google } from "googleapis";
 import { getUserById } from "../services/user.services";
 
-
-export const fetchEmailsController = async (req: Request, res: Response) : Promise<any> => {
+export const fetchEmailsController = async (req: Request, res: Response): Promise<any> => {
   console.log('fetchEmailsController called')
   try {
     const { projectId } = req.body;
     console.log(new Types.ObjectId(String(projectId)))
-    const userId  = req.session.user_id;
+    const userId = req.session.user_id;
     console.log(userId)
-     if (!userId || !projectId) {
+    if (!userId || !projectId) {
       return res.status(400).json({ error: "Missing userId or projectId" });
     }
 
     const user = await User.findById(userId);
     if (!user || !user.email || !user.refresh_token) {
       return res.status(401).json({ error: "Email account not connected" });
-    } 
-    
+    }
+
 
     if (!projectId) return res.status(400).json({ error: "Missing projectId" });
 
@@ -46,7 +45,7 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
       month: 'long',
       day: '2-digit',
       year: 'numeric',
-    }); 
+    });
     console.log(dateStr)
     const emails: any = sender_and_subject_since_date_callback(imap, dateStr, projectId, async (emails) => {
       console.log('Fetched emails:', emails);
@@ -54,8 +53,8 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
       res.status(201).json(emails)
     });
     console.log(emails)
-    
-   
+
+
   } catch (error) {
     console.error("Error fetching emails:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -69,9 +68,9 @@ export const fetchEmailsController = async (req: Request, res: Response) : Promi
  * @route GET /api/projects/:projectId/filter-senders
  */
 export async function getEmailsForFiltering(req: Request, res: Response): Promise<any> {
-  try {
-    const { projectId } = req.params;
-    const senders = await getFilterableEmails(projectId);
+  try {    
+    const project_id = req.session.project_id;
+    const senders = await getFilterableEmails(project_id);
 
     res.status(200).json(senders);
   } catch (error) {
@@ -80,6 +79,23 @@ export async function getEmailsForFiltering(req: Request, res: Response): Promis
   }
 }
 
+export const directEmails = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log('Directing')
+    const user_id = req.session.user_id
+    const user = await getUserById(user_id)
+
+    if (!user) {
+      res.redirect("http://localhost:5173/")
+    }
+    if (user!.refresh_token) {
+      getGoogleEmailsByDate(req, res, next)
+    } else if (user!.token_cache) {
+      getMicrosoftEmailsByDate(req, res, next)
+    }
+  } catch (err: any) {
+    next(err)
+  }
 
 /**
  * Controller to handle inbox email requests.
@@ -97,7 +113,8 @@ export async function getInboxEmails(req: Request, res: Response): Promise<void>
   }
 }
 
-/**
+
+  /**
  * Controller to update tap-in property of email object
  * used inside the emailItem component in frontend
  * 

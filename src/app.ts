@@ -13,13 +13,15 @@ const session = require("express-session");
 const MongoDBStore = require('connect-mongodb-session')(session);
 
 export default function createApp(): Application {
+  console.time('Create App Func')
   const app: Application = express();
   const store = new MongoDBStore({
-    uri: process.env.MONGO_URL,
+    uri: process.env.MONGO_URL_OLD,
+    databaseName: 'test',
     collection: 'sessions'
   })
   app.use(cors({
-    origin: "http://localhost:5173", 
+    origin: "http://localhost:5173",
     credentials: true,
   }));
   app.use(express.json());
@@ -36,7 +38,7 @@ export default function createApp(): Application {
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
-      store,
+      store: store,
       cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
@@ -54,7 +56,6 @@ export default function createApp(): Application {
   app.use("/api", testAuth);
   app.use("/api", userRoutes);
   app.use("/api", emailRoutes)
-
   app.use("/api", opportunityRoutes);
   app.use("/api", statusRoutes);
   //===================================================
@@ -65,5 +66,6 @@ export default function createApp(): Application {
   //
   //===================================================
   app.use(errorHandler)
+  console.timeEnd('Create App Func')
   return app;
 }

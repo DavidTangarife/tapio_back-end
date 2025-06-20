@@ -133,10 +133,11 @@ export const buildXOAuth2Token = (username: string, accessToken: string) => {
 //=====================================================
 
 export const getEmailsFromDate = async (userData: MicrosoftUserData, date: Date) => {
-  const response: any = await axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString()}&count=true`, { headers: { 'Authorization': `Bearer ${userData.token}` } })
+  const response: any = await axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString().substring(0, 19)}Z&count=true`, { headers: { 'Authorization': `Bearer ${userData.token}` } })
     .then((result: any) => {
-      return axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString()}&top=${result.data['@odata.count']}`, { headers: { 'Authorization': `Bearer ${userData.token} ` } });
+      return axios.get(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=ReceivedDateTime ge ${date.toISOString().substring(0, 19)}Z&top=${result.data['@odata.count']}`, { headers: { 'Authorization': `Bearer ${userData.token} ` } });
     });
+  console.log(response)
   return response;
 };
 

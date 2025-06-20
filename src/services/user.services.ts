@@ -12,13 +12,13 @@ interface MicrosoftUserData {
 }
 
 /* Create user or return existing one */
-export async function findOrCreateUserFromGoogle(googleUserData: GoogleUserData): Promise<[IUser, string]> {
+export async function findOrCreateUserFromGoogle(googleUserData: GoogleUserData): Promise<IUser> {
   const { email, refresh_token } = googleUserData;
   let user = await User.findOne({ email });
 
   if (!user) {
-    user = await User.create({ email, refresh_token });
-    return [user, 'new'];
+    user = await User.create({ email, refresh_token, onBoarded: false });
+    return user;
   } else {
     // update refresh token if changed
     if (user.refresh_token !== refresh_token) {
@@ -26,16 +26,16 @@ export async function findOrCreateUserFromGoogle(googleUserData: GoogleUserData)
       await user.save();
     }
   }
-  return [user, 'existing'];
+  return user;
 };
 
-export async function findOrCreateUserFromMicrosoft(microsoftUserData: MicrosoftUserData): Promise<[IUser, string]> {
+export async function findOrCreateUserFromMicrosoft(microsoftUserData: MicrosoftUserData): Promise<IUser> {
   const { email, token_cache } = microsoftUserData;
   let user = await User.findOne({ email });
 
   if (!user) {
-    user = await User.create({ email, token_cache });
-    return [user, 'new'];
+    user = await User.create({ email, token_cache, onBoarded: false });
+    return user;
   } else {
     // update token cache if changed
     if (user.token_cache !== token_cache) {
@@ -43,8 +43,32 @@ export async function findOrCreateUserFromMicrosoft(microsoftUserData: Microsoft
       await user.save();
     }
   }
-  return [user, 'existing'];
+  return user;
 
+}
+
+export async function onboardUser(_id: string, project_id: string) {
+  const user = await User.findOne({ _id });
+
+  if (!user) {
+    console.log('Failed to onboard user ' + _id)
+  } else {
+    user.onBoarded = true;
+    user.lastProject = project_id
+    await user.save();
+  }
+
+}
+
+export async function emailsConnected(_id: string) {
+  const user = await User.findOne({ _id });
+
+  if (!user) {
+    console.log('Failed to connect user\'s inbox')
+  } else {
+    user.inboxConnected = true;
+    await user.save();
+  }
 }
 
 /* Update full name after user has authenticated */

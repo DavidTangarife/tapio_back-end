@@ -1,4 +1,6 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { onboardUser } from '../services/user.services';
+import { getFilteredEmails } from '../services/email.services';
 import {
   createProject,
   getProjectByUserId,
@@ -19,12 +21,27 @@ export const createProjectController = async (req: Request, res: Response) => {
       startDate: new Date(startDate),
       filters
     });
+    // console.log("Request body:", req.body);
+    req.session.project_id = project._id
+    req.session.save()
+    await onboardUser(userId, req.session.project_id)
 
     res.status(201).json(project);
-  } catch (err:any) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getProjectEmails = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.session.user_id;
+  const projectId = req.session.project_id
+
+  if (!projectId) {
+    res.status(404).json({ error: 'No Project Found' })
+  }
+  const emails = await getFilteredEmails(projectId)
+  res.status(200).json({ emails })
+}
 
 export const handleGetProjectsByUserId = async (
   req: Request,
@@ -49,7 +66,7 @@ export const handleGetProjectsByUserId = async (
 /**
  * Controller to handle updating a project's lastLogin timestamp.
  */
-export const updateLastLoginController = async (req: Request, res: Response) : Promise<any> => {
+export const updateLastLoginController = async (req: Request, res: Response): Promise<any> => {
   try {
     const projectId = req.params.projectId;
     const project = await updateLastLogin(projectId);

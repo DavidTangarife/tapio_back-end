@@ -5,6 +5,8 @@ import { findOrCreateUserFromMicrosoft, getUserById } from "../services/user.ser
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { buildPkceCodes, confidentialClient, getAuthCodeParams, getEmailsFromDate, getNewMicrosoftClient, getOneEmail, getTokenRequest, silentlyRefreshToken } from "../services/microsoft";
 import { AxiosResponse } from "axios";
+import { getProjectById } from "../services/project.services";
+import { saveEmailsFromIMAP } from "../services/email.services";
 
 const microsoft_client: ConfidentialClientApplication = confidentialClient;
 
@@ -41,26 +43,32 @@ export const handleMicrosoftRedirect = async (req: Request, res: Response, next:
   const user = await findOrCreateUserFromMicrosoft(userData)
   req.session.user_id = user[0]._id
   req.session.save()
-  res.send('User Logged in ' + user[0]!.email + ' and this user is ' + user[1])
+  res.redirect("http://localhost:5173/setup");
 };
 
-export const getEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
-  const query = parse(req.url || "", true).query;
+export const getMicrosoftEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.session.user_id
+  const project_id = req.session.project_id;
 
   if (!user) {
     res.redirect('/microsoft-login')
   }
+  if (!project_id) {
+    res.redirect("http://localhost:5173/setup")
+  }
 
   const user_account = await getUserById(user)
   const user_data = await silentlyRefreshToken(user_account!.token_cache || '')
+  const project = await getProjectById(project_id)
   //const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
-  const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
+  const predate: any = project!.startDate
+  const date = new Date(predate - (Math.abs(project!.startDate.getTimezoneOffset() * 60000) * 2))
+  const emails: AxiosResponse = await getEmailsFromDate(user_data, date)
   if (emails.status == 200) {
     const email_objects = emails.data.value.map((x: any) => {
-      return { mailBoxid: x.id, subject: x.subject, snippet: x.bodyPreview, date: x.createdDateTime, from: x.from.emailAddress.address }
+      return { mailBoxid: x.id, subject: x.subject, snippet: x.bodyPreview, date: x.createdDateTime, from: x.from.emailAddress.address, projectId: project!._id }
     })
-    res.send(email_objects)
+    saveEmailsFromIMAP(email_objects)
   } else {
     res.send('Sorry, Something went wrong')
   }

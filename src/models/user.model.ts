@@ -1,10 +1,12 @@
 import mongoose, { Schema, model, Document, Model, ObjectId } from "mongoose";
+import { Types } from "mongoose";
 
 export interface IUser extends Document {
   fullName?: string;
   email: string;
   refresh_token?: string;
-  token_cache?: string
+  token_cache?: string;
+  last_project_id?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   lastProject?: string;

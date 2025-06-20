@@ -8,9 +8,18 @@ interface CreateProjectInput {
   startDate: Date;
   filters?: any
 }
-/* Create and return a new project */
+
+/**
+ * Creates a new project in the database and automatically initializes default statuses.
+ *
+ * The default statuses include: "To review", "Applied", "Interviewing", and "Offer",
+ * each assigned a specific display order.
+ *
+ * @param data - The input data required to create a new project.
+ * @returns The newly created project document.
+ * @throws An error if project creation or status initialization fails.
+ */
 export async function createProject(data: CreateProjectInput): Promise<IProject> {
-  //  console.log("Inside createProject service, data:", data);
   const defaultStatuses = [
     { title: "To review", order: 1 },
     { title: "Applied", order: 2 },
@@ -21,7 +30,6 @@ export async function createProject(data: CreateProjectInput): Promise<IProject>
   try {
     const project = await Project.create(data);
     console.log("Project created successfully:", project);
-    // create default status for the project in database
     await Promise.all(
       defaultStatuses.map((status) =>
         Status.create({ ...status, projectId: project._id })
@@ -51,14 +59,21 @@ export async function getProjectById(_id: string): Promise<IProject | null> {
 //   return await project?.updateFilters(filters);
 // }
 
-/* Update all or some fields of a project */
+/**
+ * Updates one or more fields of a project document by its ID.
+ * Fields that are not included in the `updates` object will remain unchanged.
+ *
+ * @param projectId - The ID of the project to update.
+ * @param updates - An object containing any combination of fields to update: name, startDate, and/or filters.
+ * @returns The updated project document.
+ * @throws Error if the project is not found in the database.
+ */
 export async function updateProject(
   projectId: string | Types.ObjectId,
   updates: {
     name?: string;
     startDate?: Date;
-    filters?: { keywords: string[]; senders: string[] };
-    blockedFilters?: { keywords: string[]; senders: string[] };
+    filters?: string[];
   }
 ) {
   const project = await Project.findById(projectId);
@@ -67,7 +82,6 @@ export async function updateProject(
   if (updates.name !== undefined) project.name = updates.name;
   if (updates.startDate !== undefined) project.startDate = updates.startDate;
   if (updates.filters !== undefined) project.filters = updates.filters;
-  if (updates.blockedFilters !== undefined) project.blockedFilters = updates.blockedFilters;
 
   return await project.save();
 }

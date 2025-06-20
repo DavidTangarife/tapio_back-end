@@ -79,4 +79,5 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
     await emailsConnected(user_id)
   }
   saveEmailsFromIMAP(emails);
+  res.status(201).json(emails)
 };

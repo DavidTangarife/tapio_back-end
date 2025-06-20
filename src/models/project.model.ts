@@ -7,14 +7,7 @@ export interface IProject extends Document {
   userId: Types.ObjectId;
   name: string;
   startDate: Date;
-  filters?: {
-    keywords: string[];
-    senders: string[];
-  };
-  blockedFilters?: {
-  keywords: string[];
-  senders: string[];
-};
+  filters: string[];
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -31,14 +24,7 @@ const projectSchema = new Schema<IProject>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   name: { type: String, required: true, unique: true },
   startDate: { type: Date, required: true },
-  filters: {
-    keywords: [{ type: String }],
-    senders: [{ type: String }]
-  },
-  blockedFilters: {
-    keywords: [{ type: String }],
-    senders: [{ type: String }]
-  },
+  filters: [{ type: String }],
   lastLogin: { type: Date, default: new Date() }
 }, {
     timestamps: true
@@ -53,7 +39,7 @@ const projectSchema = new Schema<IProject>({
 
 // static method
 projectSchema.statics.findByUserId = function (userId: string | Types.ObjectId) {
-  return this.findOne({ userId });
+  return this.find({ userId });
 };
 
 /* Validation before storing in database */

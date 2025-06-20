@@ -16,8 +16,8 @@ export default function createApp(): Application {
   console.time('Create App Func')
   const app: Application = express();
   const store = new MongoDBStore({
-    uri: process.env.MONGO_URL,
-    databaseName: 'Cluster0',
+    uri: process.env.MONGO_URL_OLD,
+    databaseName: 'test',
     collection: 'sessions'
   })
   app.use(cors({
@@ -38,7 +38,7 @@ export default function createApp(): Application {
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
-      store,
+      store: store,
       cookie: {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,

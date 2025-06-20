@@ -7,6 +7,7 @@ import { MongoClientOptions } from "mongodb";
 config();
 
 const MONGO_URL = process.env.MONGO_URL;
+const OLD_MONGO_URL = process.env.MONGO_URL_OLD
 // This use the value from the environment variable MONGO_URL, but if it’s undefined,
 // use the default string 'mongodb://mongo:27017/mydb' instead.
 // It ensure the App works in different environments, in this case is useful for
@@ -26,7 +27,7 @@ app.get("/", async function(req: Request, res: Response) {
   );
 });
 
-mongoose.connect(MONGO_URL).then(() => {
+mongoose.connect(OLD_MONGO_URL!).then(() => {
   console.log("MongoDB connected");
   app.listen(port, () => {
     console.log(
@@ -35,3 +36,14 @@ mongoose.connect(MONGO_URL).then(() => {
     console.log("Hey, You, Yes you, its all gonna be ok! YOU GOT THIS!");
   });
 });
+
+const gracefulShutdown = async () => {
+  console.log('Goodbye')
+  await mongoose.disconnect().then(() => {
+    console.log('Mongo Disconnected')
+  })
+  process.exit(0);
+}
+
+process.on('SIGINT', gracefulShutdown)
+process.on('SIGTERM', gracefulShutdown)

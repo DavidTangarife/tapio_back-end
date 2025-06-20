@@ -9,6 +9,7 @@ import { parse } from "url";
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
 import {
+  emailsConnected,
   findOrCreateUserFromGoogle,
   getUserById,
 } from "../services/user.services";
@@ -47,9 +48,18 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   };
   const user = await findOrCreateUserFromGoogle(userData);
 
-  req.session.user_id = user[0]._id;
+  req.session.user_id = user._id;
+  if (user.lastProject) {
+    req.session.project_id = user.lastProject
+  }
   req.session.save();
-  res.redirect("http://localhost:5173/setup");
+
+  console.log(req.session)
+  if (user.onBoarded) {
+    res.redirect("http://localhost:5173/home");
+  } else {
+    res.redirect("http://localhost:5173/setup");
+  }
 };
 
 export const getGoogleEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
@@ -64,6 +74,9 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
   }
   const user_account = await getUserById(user_id);
   const project = await getProjectById(project_id)
-  const emails = await getGmailApi(user_account!.refresh_token || "", req.body.projectId, project!.startDate);
+  const emails = await getGmailApi(user_account!.refresh_token || "", project_id, project!.startDate);
+  if (emails) {
+    await emailsConnected(user_id)
+  }
   saveEmailsFromIMAP(emails);
 };

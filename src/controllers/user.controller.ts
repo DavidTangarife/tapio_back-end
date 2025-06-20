@@ -1,10 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   getUserName,
   updateUserFullName,
   findOrCreateUserFromGoogle,
 } from "../services/user.services";
-import { ObjectId } from "bson";
 
 export const handleUpdateUserName = async (
   req: Request,
@@ -67,3 +66,19 @@ export async function handleGoogleAuth(
   }
 }
 
+export const checkForUser = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.session.user_id
+
+  if (!userId) {
+    return res.status(400).json({ user: false })
+  } else {
+    return res.status(200).json({ user: true })
+  }
+}
+
+export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
+  req.session.destroy((err: any) => {
+    if (err) next(err)
+    res.status(200).json({ logout: true })
+  })
+}

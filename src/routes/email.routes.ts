@@ -6,7 +6,7 @@ import requireAuth from "../middleware/require-auth";
 const router = express.Router();
 
 // router.get("/getemails", getEmailByProjectId);
-router.get("/getemails", fetchFilteredEmails);
+router.get("/getemails", requireAuth, fetchFilteredEmails);
 router.post("/fetch-emails", requireAuth, fetchEmailsController);
 router.get("/projects/:projectId/emails", requireAuth, fetchFilteredEmails)
 router.post("/direct-emails", requireAuth, directEmails)

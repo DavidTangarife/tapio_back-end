@@ -93,9 +93,9 @@ export const fetchEmailsController = async (req: Request, res: Response): Promis
 
 export const fetchFilteredEmails = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
+    const project_id = req.session.project_id;
 
-    const emails = await getFilteredEmails(projectId);
+    const emails = await getFilteredEmails(project_id);
     console.log(emails)
     res.status(200).json(emails);
   } catch (err: any) {
@@ -106,6 +106,7 @@ export const fetchFilteredEmails = async (req: Request, res: Response) => {
 
 export const directEmails = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('Directing')
     const user_id = req.session.user_id
     const user = await getUserById(user_id)
 

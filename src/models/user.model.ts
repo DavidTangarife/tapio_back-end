@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, Document, Model } from "mongoose";
+import mongoose, { Schema, model, Document, Model, ObjectId } from "mongoose";
 
 export interface IUser extends Document {
   fullName?: string;
@@ -7,6 +7,9 @@ export interface IUser extends Document {
   token_cache?: string
   createdAt: Date;
   updatedAt: Date;
+  lastProject?: string;
+  onBoarded: boolean;
+  inboxConnected: boolean;
 
   updateFullName(newName: string): Promise<void>;
 }
@@ -27,6 +30,16 @@ const userSchema = new Schema<IUser>({
   },
   token_cache: {
     type: String,
+  },
+  lastProject: {
+    type: String,
+    ref: "Project"
+  },
+  onBoarded: {
+    type: Boolean
+  },
+  inboxConnected: {
+    type: Boolean
   }
 }, {
   timestamps: true

@@ -13,7 +13,8 @@ interface IOpportunity extends Document {
   title: string;
   company: {
     name: string;
-    faviconUrl: string;
+    logoUrl: string;
+    brandColor: string;
   };
   isRejected?: boolean;
   jobAdUrl?: string;
@@ -36,7 +37,8 @@ const opportunitySchema = new Schema<IOpportunity>(
 
     company: {
       name: { type: String, required: true, trim: true },
-      faviconUrl: { type: String, default: "" }, // handled in backend
+      logoUrl: { type: String, default: "" }, // handled in backend
+      brandColor: { type: String, default: "" },
     },
     isRejected: { type: Boolean, default: false },
     jobAdUrl: {

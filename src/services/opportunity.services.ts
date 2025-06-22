@@ -10,10 +10,27 @@ interface CreateOpportunityInput {
   };
 }
 
-/* Create and return a new project */
+/* Logic to generate the LogoURL */
+function generateLogoUrl(companyName?: string): string {
+  if (!companyName) {
+    return "/default-logo.png";
+  }
+  const domain = companyName.toLowerCase().replace(/\s+/g, "") + ".com";
+  return `https://img.logo.dev/${domain}`;
+}
+
+/* Create and return a new opportunity */
 export async function createOpportunity(data: CreateOpportunityInput) {
   try {
-    const opportunity = await Opportunity.create(data);
+    const logoUrl = generateLogoUrl(data.company.name);
+    const opportunity = await Opportunity.create({
+      ...data,
+      company: {
+        ...data.company,
+        logoUrl,
+        brandColor: "",
+      },
+    });
     console.log("Opportunity created successfully:", opportunity);
     return opportunity;
   } catch (error) {

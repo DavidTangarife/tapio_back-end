@@ -17,15 +17,13 @@ export default function createApp(): Application {
   const app: Application = express();
   const store = new MongoDBStore({
     uri: process.env.MONGO_URL,
-    databaseName: "test",
-    collection: "sessions",
-  });
-  app.use(
-    cors({
-      origin: "http://localhost:5173",
-      credentials: true,
-    })
-  );
+    databaseName: 'test',
+    collection: 'sessions'
+  })
+  app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }));
   app.use(express.json());
 
   //======================================================

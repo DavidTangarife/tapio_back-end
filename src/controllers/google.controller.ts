@@ -14,8 +14,9 @@ import {
   getUserById,
 } from "../services/user.services";
 import { Types } from "mongoose";
-import { saveEmailsFromIMAP } from "../services/email.services";
+import { getEmailsByProject, saveEmailsFromIMAP } from "../services/email.services";
 import { getProjectById } from "../services/project.services";
+import { getInboxEmails } from "./email.controller";
 
 const google_client: OAuth2Client = get_google_auth_client(
   "http://localhost:3000/api/google-redirect"
@@ -78,6 +79,6 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
   if (emails) {
     await emailsConnected(user_id)
   }
-  saveEmailsFromIMAP(emails);
-  res.status(201).json(emails)
+  await saveEmailsFromIMAP(emails);
+  getInboxEmails(req, res)
 };

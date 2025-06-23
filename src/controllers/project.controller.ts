@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { onboardUser } from '../services/user.services';
+import { getUserById, onboardUser } from '../services/user.services';
 import {
   createProject,
   getProjectByUserId,
@@ -7,6 +7,7 @@ import {
   updateProject
 } from '../services/project.services';
 import { getFilterableEmails } from '../services/email.services';
+import User from "../models/user.model"
 
 
 
@@ -105,5 +106,33 @@ export const updateProjectFilters = async (req: Request, res: Response): Promise
   } catch (err: any) {
     console.error("Error updating project filters:", err);
     return res.status(500).json({ error: "Failed to update filters." });
+  }
+}
+
+/**
+ * Updates the user's active project in the session and in the database.
+ * used in Header component in frontend 
+ *
+ * @route PATCH /api/session-update
+ * @param req - Express request object containing session and new projectId
+ * @param res - Express response object used to return status
+ * @returns a success response with the new project ID or an appropriate error message
+ */
+export async function updateSession(req: Request, res: Response): Promise<any> {
+  const {projectId} = req.body;
+  const userId = req.session.user_id
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId" });
+  }
+  try {
+    const user = await getUserById(userId);
+    if (user) {
+      user.lastProject = projectId;
+      await user.save();
+    }
+    req.session.project_id = projectId;
+    res.json({ success: true, projectId })
+  } catch (err) {
+    return res.status(500).json({ error: "Internal server error" });
   }
 }

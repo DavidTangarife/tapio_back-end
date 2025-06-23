@@ -102,6 +102,8 @@ export const directEmails = async (req: Request, res: Response, next: NextFuncti
  */
 export async function getInboxEmails(req: Request, res: Response): Promise<void> {
   const projectId = req.session.project_id;
+  console.log('Getting Inbox')
+  console.log(projectId)
 
   try {
     const inboxEmails = await fetchInboxEmails(projectId);

@@ -5,6 +5,7 @@ import {
   updateProjectFilters,
   getProjectEmails,
   updateSession,
+  getSessionProject,
 } from "../controllers/project.controller";
 import requireAuth from "../middleware/require-auth";
 import { handleGetProjectsByUserId } from "../controllers/project.controller";
@@ -17,5 +18,6 @@ router.get("/user-projects", requireAuth, handleGetProjectsByUserId);
 router.patch("/projects/:projectId/last-login", updateLastLoginController);
 router.patch("/projects/filters", updateProjectFilters);
 router.patch("/session-update", requireAuth, updateSession);
+router.get("/session-project", getSessionProject);
 
 export default router;

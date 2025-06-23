@@ -1,15 +1,15 @@
-import { NextFunction, Request, Response } from 'express';
-import { getUserById, onboardUser } from '../services/user.services';
+import { NextFunction, Request, Response } from "express";
+import { getUserById, onboardUser } from "../services/user.services";
 import {
   createProject,
+  getProjectById,
   getProjectByUserId,
   updateLastLogin,
-  updateProject
-} from '../services/project.services';
-import { getFilterableEmails } from '../services/email.services';
-import User from "../models/user.model"
-
-
+  updateProject,
+} from "../services/project.services";
+import { getFilterableEmails } from "../services/email.services";
+import User from "../models/user.model";
+import { name } from "@azure/msal-node/dist/packageMetadata";
 
 export const createProjectController = async (req: Request, res: Response) => {
   const { name, startDate, filters } = req.body;
@@ -20,12 +20,12 @@ export const createProjectController = async (req: Request, res: Response) => {
       userId,
       name,
       startDate: new Date(startDate),
-      filters
+      filters,
     });
     // console.log("Request body:", req.body);
-    req.session.project_id = project._id
-    req.session.save()
-    await onboardUser(userId, req.session.project_id)
+    req.session.project_id = project._id;
+    req.session.save();
+    await onboardUser(userId, req.session.project_id);
 
     res.status(201).json(project);
   } catch (err: any) {
@@ -33,16 +33,20 @@ export const createProjectController = async (req: Request, res: Response) => {
   }
 };
 
-export const getProjectEmails = async (req: Request, res: Response, next: NextFunction) => {
+export const getProjectEmails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const userId = req.session.user_id;
-  const projectId = req.session.project_id
+  const projectId = req.session.project_id;
 
   if (!projectId) {
-    res.status(404).json({ error: 'No Project Found' })
+    res.status(404).json({ error: "No Project Found" });
   }
-  const emails = await getFilterableEmails(projectId)
-  res.status(200).json({ emails })
-}
+  const emails = await getFilterableEmails(projectId);
+  res.status(200).json({ emails });
+};
 
 export const handleGetProjectsByUserId = async (
   req: Request,
@@ -67,7 +71,10 @@ export const handleGetProjectsByUserId = async (
 /**
  * Controller to handle updating a project's lastLogin timestamp.
  */
-export const updateLastLoginController = async (req: Request, res: Response): Promise<any> => {
+export const updateLastLoginController = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const projectId = req.params.projectId;
     const project = await updateLastLogin(projectId);
@@ -80,11 +87,11 @@ export const updateLastLoginController = async (req: Request, res: Response): Pr
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }
-}
+};
 
 /**
  * Controller to update the filters array of a specific project.
- * 
+ *
  * Expects a project ID in the route parameters and a `filters` array in the request body.
  * Validates that the `filters` field is an array of strings before updating the project.
  *
@@ -93,12 +100,17 @@ export const updateLastLoginController = async (req: Request, res: Response): Pr
  * @param res - Express response object
  * @returns The updated project document or an appropriate error response
  */
-export const updateProjectFilters = async (req: Request, res: Response): Promise<any> => {
-  const projectId = req.session.project_id
+export const updateProjectFilters = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const projectId = req.session.project_id;
   const { filters } = req.body;
 
   if (!Array.isArray(filters)) {
-    return res.status(400).json({ error: "Filters must be an array of strings." });
+    return res
+      .status(400)
+      .json({ error: "Filters must be an array of strings." });
   }
   try {
     const updatedProject = await updateProject(projectId, { filters });
@@ -107,11 +119,11 @@ export const updateProjectFilters = async (req: Request, res: Response): Promise
     console.error("Error updating project filters:", err);
     return res.status(500).json({ error: "Failed to update filters." });
   }
-}
+};
 
 /**
  * Updates the user's active project in the session and in the database.
- * used in Header component in frontend 
+ * used in Header component in frontend
  *
  * @route PATCH /api/session-update
  * @param req - Express request object containing session and new projectId
@@ -119,8 +131,8 @@ export const updateProjectFilters = async (req: Request, res: Response): Promise
  * @returns a success response with the new project ID or an appropriate error message
  */
 export async function updateSession(req: Request, res: Response): Promise<any> {
-  const {projectId} = req.body;
-  const userId = req.session.user_id
+  const { projectId } = req.body;
+  const userId = req.session.user_id;
   if (!projectId) {
     return res.status(400).json({ error: "Missing projectId" });
   }
@@ -131,8 +143,16 @@ export async function updateSession(req: Request, res: Response): Promise<any> {
       await user.save();
     }
     req.session.project_id = projectId;
-    res.json({ success: true, projectId })
+    res.json({ success: true, projectId });
   } catch (err) {
     return res.status(500).json({ error: "Internal server error" });
   }
+}
+
+export async function getSessionProject(req: Request, res: Response): Promise<any> {
+  const projectId = req.session.project_id;
+  if (!projectId) {
+    return res.status(400).json({ error: "Missing projectId" });
+  }
+  return res.status(200).json({ projectId });
 }

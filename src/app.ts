@@ -16,7 +16,7 @@ export default function createApp(): Application {
   console.time('Create App Func')
   const app: Application = express();
   const store = new MongoDBStore({
-    uri: process.env.MONGO_URL_OLD,
+    uri: process.env.MONGO_URL,
     databaseName: 'test',
     collection: 'sessions'
   })

@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
     "build": "npx tsc",
-    "dev": "TS_NODE_FILES=true TS_NODE_TRANSPILE_ONLY=true nodemon --signal SIGTERM --exec ts-node ./src/index.ts"
+    "dev": "nodemon --signal SIGTERM --exec ts-node ./src/index.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.5.3",

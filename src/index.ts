@@ -7,7 +7,7 @@ import { MongoClientOptions } from "mongodb";
 config();
 
 const MONGO_URL = process.env.MONGO_URL;
-const OLD_MONGO_URL = process.env.MONGO_URL_OLD
+const OLD_MONGO_URL = process.env.MONGO_URL
 // This use the value from the environment variable MONGO_URL, but if it’s undefined,
 // use the default string 'mongodb://mongo:27017/mydb' instead.
 // It ensure the App works in different environments, in this case is useful for

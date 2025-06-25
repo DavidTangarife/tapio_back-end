@@ -8,7 +8,7 @@ export interface IProject extends Document {
   name: string;
   startDate: Date;
   filters: string[];
-  lastLogin?: Date;
+  lastEmailSync?: Date;
   createdAt: Date;
   updatedAt: Date;
   // Instance method
@@ -25,7 +25,7 @@ const projectSchema = new Schema<IProject>({
   name: { type: String, required: true, unique: true },
   startDate: { type: Date, required: true },
   filters: [{ type: String }],
-  lastLogin: { type: Date, default: new Date() }
+  lastEmailSync: { type: Date }
 }, {
     timestamps: true
   }

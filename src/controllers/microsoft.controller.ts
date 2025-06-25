@@ -5,7 +5,7 @@ import { findOrCreateUserFromMicrosoft, getUserById } from "../services/user.ser
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { buildPkceCodes, confidentialClient, getAuthCodeParams, getEmailsFromDate, getNewMicrosoftClient, getOneEmail, getTokenRequest, silentlyRefreshToken } from "../services/microsoft";
 import { AxiosResponse } from "axios";
-import { getProjectById } from "../services/project.services";
+import { getProjectById, updateLastSync } from "../services/project.services";
 import { saveEmailsFromIMAP } from "../services/email.services";
 
 const microsoft_client: ConfidentialClientApplication = confidentialClient;
@@ -61,14 +61,15 @@ export const getMicrosoftEmailsByDate = async (req: Request, res: Response, next
   const user_data = await silentlyRefreshToken(user_account!.token_cache || '')
   const project = await getProjectById(project_id)
   //const emails: AxiosResponse = await getEmailsFromDate(user_data, new Date(query.date!.toString()))
-  const predate: any = project!.startDate
-  const date = new Date(predate - (Math.abs(project!.startDate.getTimezoneOffset() * 60000) * 2))
+  const fetchStartDate = project!.lastEmailSync ?? project!.startDate
+  const date = new Date(fetchStartDate.getTime() - (Math.abs(project!.startDate.getTimezoneOffset() * 60000) * 2))
   const emails: AxiosResponse = await getEmailsFromDate(user_data, date)
   if (emails.status == 200) {
     const email_objects = emails.data.value.map((x: any) => {
       return { mailBoxid: x.id, subject: x.subject, snippet: x.bodyPreview, date: x.createdDateTime, from: x.from.emailAddress.address, projectId: project!._id }
     })
     saveEmailsFromIMAP(email_objects)
+    await updateLastSync(project_id);
   } else {
     res.send('Sorry, Something went wrong')
   }

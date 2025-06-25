@@ -6,7 +6,6 @@ export interface IUser extends Document {
   email: string;
   refresh_token?: string;
   token_cache?: string;
-  last_project_id?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   lastProject?: string;

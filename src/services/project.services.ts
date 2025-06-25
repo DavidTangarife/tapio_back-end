@@ -88,15 +88,21 @@ export async function updateProject(
 
 
 /**
- * Updates the lastLogin field of a project by ID.
+ * Updates the lastEmailSync field of a project by ID.
  * @param projectId The ID of the project to update.
  * @returns The updated project document.
  */
-export async function updateLastLogin(projectId: string) {
-  const project = await Project.findByIdAndUpdate(
-    projectId,
-    { lastLogin: new Date() },
-    { new: true }
-  );
-  return project;
+export async function updateLastSync(projectId: string) {
+  try{
+    const project = await Project.findById(projectId)
+    if (project){
+      console.log("update last email sync")
+      project.lastEmailSync = new Date();
+      await project?.save()
+      return project;
+    }
+  } catch (err) {
+    console.error("Error in updating last sync:", err);
+  }
+ 
 }

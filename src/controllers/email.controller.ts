@@ -96,25 +96,26 @@ export const directEmails = async (req: Request, res: Response, next: NextFuncti
     next(err)
   }
 }
+
 /**
- * Controller to handle inbox email requests.
- * Responds with filtered emails that match the project's allowed sender list.
+ * Controller to handle inbox email retrieval for a project.
+ * 
+ * @route GET /api/getemails
+ * @param req - Express request object, must contain a valid session with project_id.
+ * @param res - Express response object used to send back the filtered emails.
+ * @returns - Sends a JSON response or error message.
  */
 export async function getInboxEmails(req: Request, res: Response): Promise<void> {
   const projectId = req.session.project_id;
-  console.log('Getting Inbox')
-  console.log(projectId)
 
   try {
     const inboxEmails = await fetchInboxEmails(projectId);
-    console.log(inboxEmails)
     res.json({ emails: inboxEmails });
   } catch (error: any) {
     console.error("Error in getInboxEmails:", error);
     res.status(500).json({ error: "Server error" });
   }
 }
-
 
 /**
 * Controller to update tap-in property of email object
@@ -233,8 +234,6 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
     return res.status(500).json({ error: 'Failed to get email body' });
   }
 };
-
-
 
 /**
  * Controller to get specific email data from database and return email object

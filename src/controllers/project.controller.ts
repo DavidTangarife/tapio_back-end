@@ -4,7 +4,7 @@ import {
   createProject,
   getProjectById,
   getProjectByUserId,
-  updateLastLogin,
+  updateLastSync,
   updateProject,
 } from "../services/project.services";
 import { getFilterableEmails } from "../services/email.services";
@@ -71,23 +71,23 @@ export const handleGetProjectsByUserId = async (
 /**
  * Controller to handle updating a project's lastLogin timestamp.
  */
-export const updateLastLoginController = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  try {
-    const projectId = req.params.projectId;
-    const project = await updateLastLogin(projectId);
+// export const updateLastLoginController = async (
+//   req: Request,
+//   res: Response
+// ): Promise<any> => {
+//   try {
+//     const projectId = req.session.project_id
+//     const project = await updateLastSync(projectId);
 
-    if (!project) {
-      return res.status(404).json({ message: "Project not found" });
-    }
+//     if (!project) {
+//       return res.status(404).json({ message: "Project not found" });
+//     }
 
-    res.json({ message: "lastLogin updated", project });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err });
-  }
-};
+//     res.json({ message: "lastLogin updated", project });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error", error: err });
+//   }
+// };
 
 /**
  * Controller to update the filters array of a specific project.

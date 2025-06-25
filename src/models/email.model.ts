@@ -54,6 +54,8 @@ const emailSchema = new Schema<IEmail>({
 }
 );
 
+emailSchema.index({ mailBoxId: 1, projectId: 1 }, { unique: true });
+
 // Instance method
 emailSchema.methods.updateStatus = async function(
   updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted'>>

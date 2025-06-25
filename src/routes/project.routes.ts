@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createProjectController,
-  updateLastLoginController,
+  // updateLastLoginController,
   updateProjectFilters,
   getProjectEmails,
   updateSession,
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/projects", requireAuth, createProjectController);
 router.get("/projects/emails", requireAuth, getProjectEmails);
 router.get("/user-projects", requireAuth, handleGetProjectsByUserId);
-router.patch("/projects/:projectId/last-login", updateLastLoginController);
+// router.patch("/projects/:projectId/last-login", updateLastLoginController);
 router.patch("/projects/filters", updateProjectFilters);
 router.patch("/session-update", requireAuth, updateSession);
 router.get("/session-project", getSessionProject);

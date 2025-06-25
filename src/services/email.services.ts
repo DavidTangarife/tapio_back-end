@@ -15,21 +15,28 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
     console.warn("No emails to save.");
     return;
   }
-  const emailsToInsert = parsedEmailArray.map(email => ({
-    ...email,
-    createdAt: new Date(),
-  }));
+  // const emailsToInsert = parsedEmailArray.map(email => ({
+  //   ...email,
+  //   createdAt: new Date(),
+  // }));
 
-  const projectId = emailsToInsert[0]?.projectId;
+  const projectId = parsedEmailArray[0]?.projectId;
+  const existing = await Email.find({
+    projectId,
+    mailBoxId: { $in: parsedEmailArray.map(e => e.mailBoxId) }
+  });
 
+  const existingIds = new Set(existing.map(e => e.mailBoxId));
+
+  const newEmails = parsedEmailArray.filter(e => !existingIds.has(e.mailBoxId));
   if (!projectId) {
     console.error("Missing projectId in email data");
     return;
   }
 
   try {
-    await Email.insertMany(emailsToInsert);
-    console.log(`Inserted ${emailsToInsert.length} emails`);
+    await Email.insertMany(newEmails);
+    console.log(`Inserted ${newEmails.length} emails`);
     
     const project = await Project.findById(projectId);
     if (!project) {
@@ -38,7 +45,7 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
     }
 
      // Extract only email addresses (e.g., 'no-reply@x.com')
-    const rawSenders = emailsToInsert.map(email => {
+    const rawSenders = newEmails.map(email => {
       const from = email.from;
       if (typeof from === 'string') {
         return extractEmailAddress(from);
@@ -156,7 +163,7 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
 }
 
 /**
- * Fetches inbox emails for a given project based on its filters.
+ * Fetches inbox emails for a given project based on its filters
  * Only emails from allowed senders (filters) are returned.
  * @param projectId - The ID of the project whose emails to fetch.
  * @returns Filtered list of emails considered part of the inbox.
@@ -166,10 +173,11 @@ export async function fetchInboxEmails(projectId: string) {
   if (!project) throw new Error("Project not found");
 
   const filters = project.filters || [];
-  if (!filters.length) return [];
-
-  const emails = await Email.find({ projectId }).sort({ date: -1 });
-
+  const lastSync = project.lastEmailSync
+  const emails = await Email.find({ 
+    projectId,
+    date: { $lte: lastSync }
+  }).sort({ date: -1 });
   const inboxEmails = emails.filter(email => {
     const fromEmail = extractEmailAddress(email.from);
     return filters.includes(fromEmail);
@@ -177,38 +185,3 @@ export async function fetchInboxEmails(projectId: string) {
 
   return inboxEmails;
 }
-
-/**
- * Fetches emails for a test project with optional filters applied in DB.
- * Filters include matching subject keywords and sender email patterns.
- * Currently hardcoded for testing with a specific project ID.
- */
-// export async function getFilteredEmails(project_id: string) {
-//   const projectId = new Types.ObjectId(project_id);
-  
-//   const project = await Project.findById(projectId);
-//   if (!project) throw new Error("Project not found");
-
-//   const { filters, startDate } = project;
-
-//   // Find the latest email already saved for this project
-//   const latestEmail = await Email.findOne({ projectId }).sort({ mailBoxId: -1 });
-//   // const dateThreshold = latestEmail && latestEmail.date
-//   //   ? latestEmail.date
-//   //   : startDate;
-
-//   // Create a base query object to match emails for this project
-//   const query: any = {
-//     projectId,
-//     // date: { $gt: dateThreshold },
-//   };
-
-//   // Build sender filter (includes + excludes)
-//   const senderFilter = buildRegexFilter(filters);
-//   if (senderFilter) {
-//     query.from = senderFilter;
-//   }
-  
-//   return await Email.find(query).sort({ date: -1 });
-// }
-

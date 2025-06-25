@@ -1,6 +1,8 @@
 import Project, { IProject } from "../models/project.model"
 import { Types } from "mongoose";
 import Status from "../models/status.model"
+import Email from "../models/email.model"
+import Opportunity from "../models/opportunity.model";
 
 interface CreateProjectInput {
   userId: Types.ObjectId;
@@ -53,11 +55,6 @@ export async function getProjectById(_id: string): Promise<IProject | null> {
   return await Project.findOne({ _id });
 };
 
-// export async function updateProjectFilters(projectId: string, filters: { keywords: string[]; senders: string[] }) {
-//   const project = await Project.findById(projectId);
-//   if (!projectId) throw new Error("Project not found");
-//   return await project?.updateFilters(filters);
-// }
 
 /**
  * Updates one or more fields of a project document by its ID.
@@ -89,6 +86,7 @@ export async function updateProject(
 
 /**
  * Updates the lastEmailSync field of a project by ID.
+ * 
  * @param projectId The ID of the project to update.
  * @returns The updated project document.
  */
@@ -105,4 +103,15 @@ export async function updateLastSync(projectId: string) {
     console.error("Error in updating last sync:", err);
   }
  
+}
+
+/**
+ * Deletes a project and all associated emails and opportunities.
+ * 
+ * @param projectId - The ID of the project to delete.
+ */
+export async function deleteProjectAndEmails(projectId: Types.ObjectId | string) {
+  await Email.deleteMany({ projectId });
+  await Opportunity.deleteMany({ projectId });
+  await Project.findByIdAndDelete(projectId);
 }

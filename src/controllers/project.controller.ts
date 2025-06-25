@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { getUserById, onboardUser } from "../services/user.services";
 import {
   createProject,
+  deleteProjectAndEmails,
   getProjectById,
   getProjectByUserId,
   updateLastSync,
@@ -69,27 +70,6 @@ export const handleGetProjectsByUserId = async (
 };
 
 /**
- * Controller to handle updating a project's lastLogin timestamp.
- */
-// export const updateLastLoginController = async (
-//   req: Request,
-//   res: Response
-// ): Promise<any> => {
-//   try {
-//     const projectId = req.session.project_id
-//     const project = await updateLastSync(projectId);
-
-//     if (!project) {
-//       return res.status(404).json({ message: "Project not found" });
-//     }
-
-//     res.json({ message: "lastLogin updated", project });
-//   } catch (err) {
-//     res.status(500).json({ message: "Server error", error: err });
-//   }
-// };
-
-/**
  * Controller to update the filters array of a specific project.
  *
  * Expects a project ID in the route parameters and a `filters` array in the request body.
@@ -155,4 +135,26 @@ export async function getSessionProject(req: Request, res: Response): Promise<an
     return res.status(400).json({ error: "Missing projectId" });
   }
   return res.status(200).json({ projectId });
+}
+
+
+/**
+ * Controller to delete a project and its associated emails.
+ * @route DELETE /api/projects
+ */
+export async function deleteProjectById(req: Request, res: Response): Promise<void> {
+  const { projectId } = req.body;
+
+  if (!projectId) {
+    res.status(400).json({ error: "Project ID is required." });
+    return;
+  }
+
+  try {
+    await deleteProjectAndEmails(projectId);
+    res.status(200).json({ message: "Project and associated emails deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    res.status(500).json({ error: "Failed to delete project." });
+  }
 }

@@ -79,39 +79,17 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
     return res.status(404).json({ error: "User or project not found" });
   }
 
-  // Determine fetchStartDate
-  let fetchStartDate: Date;
-  if (!user_account.inboxConnected) {
-    fetchStartDate = new Date(project.startDate);
-  } else {
-    const lastSync = project.lastEmailSync ?? project.startDate;
-    fetchStartDate = new Date(new Date(lastSync).getTime() - 60 * 1000); // 1-minute buffer
-  }
-
-  console.log("fetch start date inside google function:", fetchStartDate);
+  const baseDate = project.lastEmailSync ?? project.startDate;
+  const fetchStartDate = new Date(new Date(baseDate).getTime() - 60 * 1000);
 
   // Fetch emails
   const emails = await getGmailApi(user_account.refresh_token || "", project_id, fetchStartDate);
   if (emails && emails.length > 0) {
     await saveEmailsFromIMAP(emails);
-
-    // Mark inbox as connected if it's the first successful fetch
-    if (!user_account.inboxConnected) {
-      user_account.inboxConnected = true;
-      await user_account.save();
-    }
-
     await emailsConnected(user_id);
   } else {
-    console.log("✅ Gmail API returned 0 emails.");
+    console.log("Gmail API returned 0 emails.");
   }
-
-  // Update last sync time
   await updateLastSync(project_id);
-
-  // Re-fetch updated project for session
-  const updatedProject = await getProjectById(project_id);
-  req.session.project_id = updatedProject?._id;
-
   return getInboxEmails(req, res);
 };

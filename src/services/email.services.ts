@@ -15,10 +15,6 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
     console.warn("No emails to save.");
     return;
   }
-  // const emailsToInsert = parsedEmailArray.map(email => ({
-  //   ...email,
-  //   createdAt: new Date(),
-  // }));
 
   const projectId = parsedEmailArray[0]?.projectId;
   const existing = await Email.find({

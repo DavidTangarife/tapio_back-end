@@ -94,7 +94,6 @@ export async function updateLastSync(projectId: string) {
   try{
     const project = await Project.findById(projectId)
     if (project){
-      console.log("update last email sync")
       project.lastEmailSync = new Date();
       await project?.save()
       return project;

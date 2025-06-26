@@ -9,8 +9,7 @@ import {
   updateProject,
 } from "../services/project.services";
 import { getFilterableEmails } from "../services/email.services";
-import User from "../models/user.model";
-import { name } from "@azure/msal-node/dist/packageMetadata";
+
 
 export const createProjectController = async (req: Request, res: Response) => {
   const { name, startDate, filters } = req.body;
@@ -142,7 +141,7 @@ export async function getSessionProject(req: Request, res: Response): Promise<an
  * Controller to delete a project and its associated emails.
  * @route DELETE /api/projects
  */
-export async function deleteProjectById(req: Request, res: Response): Promise<void> {
+export async function deleteProjectById(req: Request, res: Response): Promise<any> {
   const { projectId } = req.body;
 
   if (!projectId) {

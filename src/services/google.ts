@@ -98,15 +98,9 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
   //
   //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
-  // const pre_date = Math.floor(date.getTime() / 1000)
-  // const query = `after:${pre_date}`
-  // const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
-  // console.log(emails)
-  // let payload: string[] = (emails.data.messages! || []).map((x) => x.id!.toString())
-  //const pre_date = date.setTime(date.getTime() - (Math.abs(date.getTimezoneOffset() * 60000)))
   const query = `after:${date.getTime().toString().substring(0, 10)}`
   const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
-  let payload: string[] = emails.data.messages!.map((x) => x.id!.toString())
+  let payload: string[] = (emails.data.messages! || []).map((x) => x.id!.toString())
   const email_list: any[] = [];
 
   //===========================================

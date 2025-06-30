@@ -150,7 +150,7 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
         from: email.from,
         subject: email.subject,
         date: email.date,
-        isBlocked: !filters.includes(plainEmail)
+        isApproved: filters.includes(plainEmail)
       });
     }
   });

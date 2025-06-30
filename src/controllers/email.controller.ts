@@ -171,6 +171,35 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
 }
 
 /**
+ * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
+ * used inside the filter component
+ * 
+ * @route PATCH /api/emails/:emailId/process
+ * @param req - Express request object containing the email ID in `req.params`.
+ * @param res - Express response object used to send the updated email or error.
+ * @returns  Returns JSON with the updated email object if successful, or anerror message
+ */
+export async function processAndApprove (req: Request, res: Response): Promise<any> {
+  const { isApproved } = req.body;
+  const { emailId } = req.params;
+
+  try {
+    const email = await Email.findById(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    email.isProcessed = true;
+    email.isApproved = isApproved;
+    await email.save();
+
+    res.json(email);
+  } catch (err) {
+    console.error("Failed to mark email as read:", err);
+    res.status(500).json({ error: "Failed to mark email as read" });
+  }
+}
+
+
+/**
  * Controller to get email body for a specific emaildid.
  * 
  * @route  GET /api/emails/emailid/body

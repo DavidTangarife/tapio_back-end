@@ -147,33 +147,14 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
 
-  const approved_senders = project.filters || [];
-  const blocked_senders = project.blocked || [];
+  // const approved_senders = project.filters || [];
+  // const blocked_senders = project.blocked || [];
 
-  const emails = await Email.find({ projectId }).sort({ date: -1 });
+  const emails = await Email.find({ projectId, isProcessed: false }).sort({ date: -1 });
 
-  const newSendersMap = new Map();
+  
 
-
-  emails.forEach(email => {
-    const plainEmail = extractEmailAddress(email.from);
-    if (!email.isProcessed &&  !newSendersMap.has(plainEmail)) {
-      newSendersMap.set(plainEmail, {
-        _id: email._id,
-        from: email.from,
-        subject: email.subject,
-        date: email.date,
-
-        isApproved: approved_senders.includes(plainEmail),
-        isProcessed: email.isProcessed
-
-        // isApproved: filters.includes(plainEmail)
-
-      });
-    }
-  });
-
-  return Array.from(newSendersMap.values());
+  return emails;
 }
 
 /**

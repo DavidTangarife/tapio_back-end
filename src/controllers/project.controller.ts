@@ -7,6 +7,7 @@ import {
   updateProject,
 } from "../services/project.services";
 import { getFilterableEmails } from "../services/email.services";
+import Project from "../models/project.model"
 
 
 export const createProjectController = async (req: Request, res: Response) => {
@@ -82,20 +83,28 @@ export const updateProjectFilters = async (
   res: Response
 ): Promise<any> => {
   const projectId = req.session.project_id;
-  const { filters } = req.body;
+  const { sender, action } = req.body;
 
-  if (!Array.isArray(filters)) {
-    return res
-      .status(400)
-      .json({ error: "Filters must be an array of strings." });
+   if (typeof sender !== "string" || !["allow", "block"].includes(action)) {
+    return res.status(400).json({ error: "Invalid sender or action" });
   }
-  try {
-    const updatedProject = await updateProject(projectId, { filters });
-    return res.json(updatedProject);
-  } catch (err: any) {
-    console.error("Error updating project filters:", err);
-    return res.status(500).json({ error: "Failed to update filters." });
+
+  const project = await Project.findById(projectId);
+  if (!project) return res.status(404).json({ error: "Project not found" });
+
+  if (action === "allow") {
+    if (!project.filters.includes(sender)) {
+      project.filters.push(sender)
+    }
+    project.blocked = project.blocked.filter(e => e !== sender);
+  } else {
+    if (!project.blocked.includes(sender)) {
+      project.blocked.push(sender);
+    }
+    project.filters = project.filters.filter(e => e !== sender);
   }
+  await project.save();
+  return res.json({ message: "Filters updated", filters: project.filters, blocked: project.blocked });
 };
 
 /**

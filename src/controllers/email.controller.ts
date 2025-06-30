@@ -286,3 +286,17 @@ export async function getEmailData(req: Request, res: Response): Promise<any> {
     res.status(500).json({ error: "Failed to mark email as read" });
   }
 }
+
+export async function getAllowedEmails(req: Request, res: Response): Promise<any> {
+  const projectId = req.session.project_id
+
+  const emails = await Email.find({ projectId, isApproved: true}). sort({ date: -1});
+  res.json({ emails });
+}
+
+export async function getBlockedEmails(req: Request, res: Response): Promise<any> {
+  const projectId = req.session.project_id
+
+  const emails = await Email.find({ projectId, isApproved: false}). sort({ date: -1});
+  res.json({ emails });
+}

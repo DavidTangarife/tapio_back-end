@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/projects", requireAuth, createProjectController);
 router.get("/projects/emails", requireAuth, getProjectEmails);
 router.get("/user-projects", requireAuth, handleGetProjectsByUserId);
-router.patch("/projects/filters", updateProjectFilters);
+router.patch("/projects/filters", requireAuth, updateProjectFilters);
 router.patch("/session-update", requireAuth, updateSession);
 router.get("/session-project", getSessionProject);
 router.delete("/projects",  requireAuth, deleteProjectById);

@@ -3,7 +3,10 @@ import {
   createOpportunity,
   getOpportunitiesByProject,
   updateOpportunityStatus,
+  deleteOpportunity,
+  updateOpportunity,
 } from "../services/opportunity.services";
+import { assignOpportunityToEmail } from "../services/email.services";
 import { ObjectId } from "bson";
 import { Types } from "mongoose";
 
@@ -11,21 +14,25 @@ export const createOpportunityController = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { statusId, title, company } = req.body;
-  const projectId = req.session.project_id
-  if (!projectId || !statusId || !title || !company?.name) {
+  const { statusId, title, company, emailId } = req.body;
+  const projectId = req.session.project_id;
+
+  if (!projectId || !statusId || !title || !company?.name || !emailId) {
     return res.status(400).json({ error: "Missing required fields." });
   }
 
   try {
-    const project = await createOpportunity({
+    // Creates the opportunity
+    const opportunity = await createOpportunity({
       projectId: new ObjectId(String(projectId)),
       statusId: new ObjectId(String(statusId)),
       title,
       company,
     });
+    // Update the email with the opportunity ID
+    await assignOpportunityToEmail(emailId, opportunity._id as Types.ObjectId);
 
-    res.status(201).json(project);
+    res.status(201).json(opportunity);
   } catch (err: any) {
     console.error("Error creating the opportunity:", err.message);
     res.status(500).json({ error: err.message });
@@ -73,5 +80,52 @@ export const updateOpportunityStateController = async (
   } catch (err: any) {
     console.error("Error updating the the opportunity:", err.message);
     res.status(500).json({ error: "Fail, Internal Server error" });
+  }
+};
+
+// Controller that deletes Opportunity by ID
+export const deleteOpportunityById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { opportunityId } = req.params;
+  if (!opportunityId) {
+    return res.status(400).json({ error: "Opportunity ID is required" });
+  }
+
+  try {
+    const opportunityObjectId = new Types.ObjectId(opportunityId?.toString());
+    const result = await deleteOpportunity(opportunityObjectId);
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    console.error("Error deleting the opportunity:", err.message);
+    res.status(500).json({ error: "Failed to delete opportunity" });
+  }
+};
+
+// Controller that Updates whole opportunity by ID
+
+export const UpdateOpportunityById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { opportunityId } = req.params;
+  const updatedData = req.body;
+
+  if (!opportunityId || !updatedData) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  try {
+    const opportunityObjectId = new Types.ObjectId(opportunityId.toString());
+    const updatedOpportunity = await updateOpportunity(
+      opportunityObjectId,
+      updatedData
+    );
+    res.status(200).json(updatedOpportunity);
+  } catch (err: any) {
+    console.error("Error updating opportunity:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

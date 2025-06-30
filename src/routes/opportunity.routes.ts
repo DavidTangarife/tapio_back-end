@@ -3,13 +3,17 @@ import {
   createOpportunityController,
   getOpportunitiesByProjectController,
   updateOpportunityStateController,
+  UpdateOpportunityById,
+  deleteOpportunityById,
 } from "../controllers/opportunity.controller";
 import requireAuth from "../middleware/require-auth";
 
 const router = express.Router();
 
-router.post("/opportunity", requireAuth, createOpportunityController);
+router.post("/opportunity/from-email", requireAuth, createOpportunityController);
 router.get("/opportunity", requireAuth, getOpportunitiesByProjectController);
 router.patch("/opportunity/:opportunityId", updateOpportunityStateController);
+router.patch("/opportunity/:opportunityId/full", UpdateOpportunityById);
+router.delete("/opportunity/:opportunityId", deleteOpportunityById);
 
 export default router;

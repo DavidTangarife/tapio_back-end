@@ -1,15 +1,9 @@
 import { Schema, model, Document, Types, Model } from "mongoose";
 import Project from "./project.model";
 
-interface Snip {
-  label: string; // "Deadline", "Contact name"
-  value: string; // "15 March", "John"
-}
-
 interface IOpportunity extends Document {
   projectId: Types.ObjectId;
   statusId: Types.ObjectId;
-  emailId?: Types.ObjectId;
   title: string;
   company: {
     name: string;
@@ -18,7 +12,13 @@ interface IOpportunity extends Document {
   };
   isRejected?: boolean;
   jobAdUrl?: string;
-  snips?: Snip[];
+  snippets?: [string];
+  description?: {
+    location: string;
+    type: string;
+    salary: string;
+    posted: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,7 +32,6 @@ const opportunitySchema = new Schema<IOpportunity>(
   {
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     statusId: { type: Schema.Types.ObjectId, ref: "Status", required: true },
-    emailId: { type: Schema.Types.ObjectId, ref: "Email" },
     title: { type: String, required: true, trim: true },
 
     company: {
@@ -48,9 +47,15 @@ const opportunitySchema = new Schema<IOpportunity>(
         message: (props) => `${props.value} is not a valid URL`,
       },
     },
-    snips: {
-      type: [{ label: String, value: String }],
+    snippets: {
+      type: [String],
       default: [],
+    },
+    description: {
+      location: { type: String, default: "" },
+      type: { type: String, default: "" },
+      salary: { type: String, default: "" },
+      posted: { type: String, default: "" },
     },
   },
   {

@@ -10,6 +10,18 @@ interface CreateOpportunityInput {
   };
 }
 
+interface EditOpportunity {
+  statusId: Types.ObjectId;
+  title: string;
+  snippets?: [string];
+  description?: {
+    location: string;
+    type: string;
+    salary: string;
+    posted: string;
+  };
+}
+
 /* Logic to generate the LogoURL */
 function generateLogoUrl(companyName?: string): string {
   if (!companyName) {
@@ -67,6 +79,25 @@ export async function updateOpportunityStatus(
   }
 }
 
+/* Update opportunity */
+export async function updateOpportunity(
+  opportunityId: Types.ObjectId,
+  updatedFields: EditOpportunity
+) {
+  try {
+    const result = await Opportunity.findByIdAndUpdate(
+      opportunityId,
+      { $set: updatedFields },
+      { new: true }
+    );
+    if (!result) throw new Error("Opportunity not found");
+    return result;
+  } catch (err: any) {
+    console.error("Error in updateOpportunityFields:", err.message);
+    throw new Error("Failed to update opportunity.");
+  }
+}
+
 /* Delete opportunity */
 export async function deleteOpportunity(opportunityId: Types.ObjectId) {
   try {
@@ -78,7 +109,7 @@ export async function deleteOpportunity(opportunityId: Types.ObjectId) {
 
     return true;
   } catch (err: any) {
-    console.error("Error in deleteOpportunity:", err.message);
+    console.error("Error in delete Opportunity:", err.message);
     throw new Error("Failed to delete opportunity.");
   }
 }

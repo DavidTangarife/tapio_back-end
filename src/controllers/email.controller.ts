@@ -64,13 +64,13 @@ export const fetchEmailsController = async (req: Request, res: Response): Promis
  * Controller to return a summary list of email senders for filtering.
  * Responds with an array of senders, each showing one sample email and block status.
  *
- * @route GET /api/projects/:projectId/filter-senders
+ * @route GET /api/projects/filter-senders
  */
 export async function getEmailsForFiltering(req: Request, res: Response): Promise<any> {
   try {
     const project_id = req.session.project_id;
     const senders = await getFilterableEmails(project_id);
-
+    console.log("not processed emails", senders)
     res.status(200).json(senders);
   } catch (error) {
     console.error("Error in getEmailsForFiltering:", error);

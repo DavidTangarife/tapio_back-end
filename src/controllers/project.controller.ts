@@ -3,9 +3,7 @@ import { getUserById, onboardUser } from "../services/user.services";
 import {
   createProject,
   deleteProjectAndEmails,
-  getProjectById,
   getProjectByUserId,
-  updateLastSync,
   updateProject,
 } from "../services/project.services";
 import { getFilterableEmails } from "../services/email.services";

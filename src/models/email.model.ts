@@ -12,6 +12,8 @@ export interface IEmail extends Document {
   bcc?: string[];
   date?: Date;
   isRead?: boolean;
+  isProcessed?: boolean;
+  isApproved?: boolean;
   isTapped?: boolean;
   isDeleted?: boolean;
   isReplied?: boolean;
@@ -42,6 +44,8 @@ const emailSchema = new Schema<IEmail>({
   bcc: [{ type: String }],
   date: { type: Date },
   isRead: { type: Boolean, default: false },
+  isProcessed: { type: Boolean, default: false },
+  isApproved: { type: Boolean }, //if the user processed and want to keep it is true
   isTapped: { type: Boolean, default: false },
   isDeleted: { type: Boolean, default: false },
   isReplied: { type: Boolean, default: false },

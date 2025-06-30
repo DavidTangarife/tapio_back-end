@@ -31,9 +31,6 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
   }
 
   try {
-    await Email.insertMany(newEmails);
-    console.log(`Inserted ${newEmails.length} emails`);
-    
     const project = await Project.findById(projectId);
     if (!project) {
       console.error("Project not found");
@@ -52,12 +49,26 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
       }
     }).filter(Boolean); // remove empty strings
 
-    const uniqueNewSenders = [...new Set(rawSenders)];
-    const existingFilters = project.filters ?? [];
-
+    // const uniqueNewSenders = [...new Set(rawSenders)];
+    let existingFilters = project.filters ?? [];
+    let existingBlocked = project.blocked ?? [];
+    newEmails.forEach(e => {
+      const senderEmail = extractEmailAddress(e.from);
+      if (existingFilters.includes(senderEmail)){
+        e.isApproved= true;
+        e.isProcessed = true;
+        // existingFilters = [...existingFilters, extractEmailAddress(e.from)]
+      } else if (existingBlocked.includes(senderEmail)) {
+        e.isApproved = false;
+        e.isProcessed = true;
+        // existingBlocked = [...existingBlocked, extractEmailAddress(e.from)]
+      }
+    })
+    await Email.insertMany(newEmails);
+    console.log(`Inserted ${newEmails.length} emails`);
     // Merge unique values
-    const combined = [...new Set([...existingFilters, ...uniqueNewSenders])];
-    project.filters = combined;
+    // const combined = [...new Set([...existingFilters, ...uniqueNewSenders])];
+    // project.filters = combined;
 
     await project.save();
     console.log("Project filters updated with new senders.");
@@ -68,7 +79,7 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
       console.warn(`${err.writeErrors.length} emails failed. Retrying individually...`);
 
       for (const writeError of err.writeErrors) {
-        const failedEmail = writeError.getOpertaion();
+        const failedEmail = writeError.getOperation();
 
         try {
           await Email.create(failedEmail);
@@ -136,26 +147,29 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
 
-  const filters = project.filters || [];
+  const approved_senders = project.filters || [];
+  const blocked_senders = project.blocked || [];
 
   const emails = await Email.find({ projectId }).sort({ date: -1 });
 
-  const uniqueSendersMap = new Map();
+  const newSendersMap = new Map();
+
 
   emails.forEach(email => {
     const plainEmail = extractEmailAddress(email.from);
-    if (!uniqueSendersMap.has(plainEmail)) {
-      uniqueSendersMap.set(plainEmail, {
+    if (!email.isProcessed &&  !newSendersMap.has(plainEmail)) {
+      newSendersMap.set(plainEmail, {
         _id: email._id,
         from: email.from,
         subject: email.subject,
         date: email.date,
-        isBlocked: !filters.includes(plainEmail)
+        isApproved: approved_senders.includes(plainEmail),
+        isProcessed: email.isProcessed
       });
     }
   });
 
-  return Array.from(uniqueSendersMap.values());
+  return Array.from(newSendersMap.values());
 }
 
 /**

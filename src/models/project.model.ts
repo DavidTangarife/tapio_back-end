@@ -8,6 +8,7 @@ export interface IProject extends Document {
   name: string;
   startDate: Date;
   filters: string[];
+  blocked: string[];
   lastEmailSync?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +26,7 @@ const projectSchema = new Schema<IProject>({
   name: { type: String, required: true, unique: true },
   startDate: { type: Date, required: true },
   filters: [{ type: String }],
+  blocked: [{ type: String }],
   lastEmailSync: { type: Date }
 }, {
     timestamps: true

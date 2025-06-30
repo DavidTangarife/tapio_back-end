@@ -170,6 +170,11 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
   }
 }
 
+function extractEmailAddress(from: string): string {
+    const match = from.match(/<(.+)>/);
+    return match ? match[1] : from.trim();
+  }
+
 /**
  * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
  * used inside the filter component
@@ -182,16 +187,27 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
 export async function processAndApprove (req: Request, res: Response): Promise<any> {
   const { isApproved } = req.body;
   const { emailId } = req.params;
+  const projectId = req.session.project_id;
 
   try {
     const email = await Email.findById(emailId);
     if (!email) return res.status(404).json({ error: "Email not found" });
 
-    email.isProcessed = true;
-    email.isApproved = isApproved;
-    await email.save();
+    const sender = extractEmailAddress(email.from);
+    await Email.updateMany(
+      {
+        projectId,
+        from: new RegExp(sender, "i"),
+      },
+      {
+        $set: {
+          isProcessed: true,
+          isApproved: isApproved,
+        }
+      }
+    )
 
-    res.json(email);
+    res.json({email, message: "All sender emails updated"});
   } catch (err) {
     console.error("Failed to mark email as read:", err);
     res.status(500).json({ error: "Failed to mark email as read" });

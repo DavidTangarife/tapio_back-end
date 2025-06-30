@@ -163,8 +163,12 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
         from: email.from,
         subject: email.subject,
         date: email.date,
+
         isApproved: approved_senders.includes(plainEmail),
         isProcessed: email.isProcessed
+
+        // isApproved: filters.includes(plainEmail)
+
       });
     }
   });

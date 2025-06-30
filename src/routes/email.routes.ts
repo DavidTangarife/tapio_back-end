@@ -8,6 +8,7 @@ import {
   getInboxEmails,
   updateIsRead,
   updateTapIn,
+  processAndApprove
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
 
@@ -21,5 +22,6 @@ router.patch("/emails/:emailId/tap", requireAuth, updateTapIn);
 router.patch("/emails/:emailId/read", requireAuth, updateIsRead);
 router.get('/emails/:emailId/body', requireAuth, getEmailBody);
 router.get("/emails/:emailId", requireAuth, getEmailData);
+router.patch("/emails/:emailId/process", requireAuth, processAndApprove);
 
 export default router;

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ObjectId } from "bson";
 import {
   createStatus,
@@ -71,6 +71,7 @@ export const getKanbanController = async (
       };
     });
 
+    console.log(kanbanData)
     res.status(200).json(kanbanData);
   } catch (err: any) {
     console.error("Error in getKanban:", err.message);
@@ -92,3 +93,19 @@ export const handleGetStatusesByProject = async (req: Request, res: Response): P
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const updateStatusColumnName = async (req: Request, res: Response, next: NextFunction) => {
+  const projectId = req.session.project_id;
+  try {
+    const status = await Status.findOne({ _id: req.body.id })
+    if (status) {
+      status.title = req.body.name
+      status.save()
+      res.status(200).send()
+    } else {
+      res.status(404).json({ error: "Project Status not found!" })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}

@@ -1,8 +1,15 @@
-import { Schema, model, Document, Types, Model, WithoutUndefined } from "mongoose";
+import {
+  Schema,
+  model,
+  Document,
+  Types,
+  Model,
+  WithoutUndefined,
+} from "mongoose";
 
 export interface IEmail extends Document {
   projectId: Types.ObjectId;
-  // opportunityId?: Types.ObjectId;
+  opportunityId: Types.ObjectId;
   mailBoxId: string;
   subject: string;
   snippet: string;
@@ -18,14 +25,25 @@ export interface IEmail extends Document {
   isDeleted?: boolean;
   isReplied?: boolean;
   isOutgoing?: boolean;
-  isApproved?: boolean;
-  isProcessed?: boolean;
   threadId?: string;
   body?: string;
   createdAt: Date;
   updatedAt: Date;
   raw?: {};
-  updateStatus(updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted' | 'isApproved' | 'isProcessed'>>): Promise<void>;
+  updateStatus(
+    updates: Partial<
+      Pick<
+        IEmail,
+        | "isRead"
+        | "isReplied"
+        | "isOutgoing"
+        | "isTapped"
+        | "isDeleted"
+        | "isApproved"
+        | "isProcessed"
+      >
+    >
+  ): Promise<void>;
 }
 
 // Static methods type
@@ -52,8 +70,6 @@ const emailSchema = new Schema<IEmail>({
   isDeleted: { type: Boolean, default: false },
   isReplied: { type: Boolean, default: false },
   isOutgoing: { type: Boolean, default: false },
-  isApproved: { type: Boolean, default: null },
-  isProcessed: { type: Boolean, default: false },
   threadId: { type: String },
   body: { type: String },
   raw: { type: String },
@@ -65,19 +81,32 @@ const emailSchema = new Schema<IEmail>({
 // emailSchema.index({ mailBoxId: 1, projectId: 1 }, { unique: true });
 
 // Instance method
-emailSchema.methods.updateStatus = async function(
-  updates: Partial<Pick<IEmail, 'isRead' | 'isReplied' | 'isOutgoing' | 'isTapped' | 'isDeleted' | 'isApproved' | 'isProcessed'>>
+emailSchema.methods.updateStatus = async function (
+  updates: Partial<
+    Pick<
+      IEmail,
+      | "isRead"
+      | "isReplied"
+      | "isOutgoing"
+      | "isTapped"
+      | "isDeleted"
+      | "isApproved"
+      | "isProcessed"
+    >
+  >
 ) {
   Object.assign(this, updates);
   await this.save();
-}
+};
 
 // Static method
-emailSchema.statics.findByProjectId = async function(projectId: Types.ObjectId) {
-  return this.find({ projectId })
-}
+emailSchema.statics.findByProjectId = async function (
+  projectId: Types.ObjectId
+) {
+  return this.find({ projectId });
+};
 
-emailSchema.post("save", function(doc) {
+emailSchema.post("save", function (doc) {
   console.log(`Email saved: ${doc._id}`);
 });
 

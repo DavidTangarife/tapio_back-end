@@ -1,7 +1,6 @@
-import Email from "../models/email.model"
+import Email from "../models/email.model";
 import { Types } from "mongoose";
-import Project from "../models/project.model"
-
+import Project from "../models/project.model";
 
 /**
  * Saves an array of parsed email objects to the database in a single bulk insert.
@@ -9,45 +8,56 @@ import Project from "../models/project.model"
  * If some emails fail to insert, retries them one by one.
  * @parsedEmailArray: Array of email objects parsed from IMAP to save in DB.
  */
-export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void> {
+export async function saveEmailsFromIMAP(
+  parsedEmailArray: any[]
+): Promise<void> {
   console.log(parsedEmailArray);
   if (!Array.isArray(parsedEmailArray) || parsedEmailArray.length === 0) {
     console.warn("No emails to save.");
     return;
   }
-
   const projectId = parsedEmailArray[0]?.projectId;
   const existing = await Email.find({
     projectId,
-    mailBoxId: { $in: parsedEmailArray.map(e => e.mailBoxId) }
+    mailBoxId: { $in: parsedEmailArray.map((e) => e.mailBoxId) },
   });
 
-  const existingIds = new Set(existing.map(e => e.mailBoxId));
+  const existingIds = new Set(existing.map((e) => e.mailBoxId));
 
-  const newEmails = parsedEmailArray.filter(e => !existingIds.has(e.mailBoxId));
+  const newEmails = parsedEmailArray.filter(
+    (e) => !existingIds.has(e.mailBoxId)
+  );
   if (!projectId) {
     console.error("Missing projectId in email data");
     return;
   }
 
   try {
+<<<<<<< HEAD
+=======
+    await Email.insertMany(newEmails);
+    console.log(`Inserted ${newEmails.length} emails`);
+
+>>>>>>> main
     const project = await Project.findById(projectId);
     if (!project) {
       console.error("Project not found");
       return;
     }
 
-     // Extract only email addresses (e.g., 'no-reply@x.com')
-    const rawSenders = newEmails.map(email => {
-      const from = email.from;
-      if (typeof from === 'string') {
-        return extractEmailAddress(from);
-      } else if (from?.value?.[0]?.address) {
-        return from.value[0].address.trim(); // handle object format
-      } else {
-        return '';
-      }
-    }).filter(Boolean); // remove empty strings
+    // Extract only email addresses (e.g., 'no-reply@x.com')
+    const rawSenders = newEmails
+      .map((email) => {
+        const from = email.from;
+        if (typeof from === "string") {
+          return extractEmailAddress(from);
+        } else if (from?.value?.[0]?.address) {
+          return from.value[0].address.trim(); // handle object format
+        } else {
+          return "";
+        }
+      })
+      .filter(Boolean); // remove empty strings
 
     // const uniqueNewSenders = [...new Set(rawSenders)];
     let existingFilters = project.filters ?? [];
@@ -72,11 +82,11 @@ export async function saveEmailsFromIMAP(parsedEmailArray: any[]): Promise<void>
 
     await project.save();
     console.log("Project filters updated with new senders.");
-    
-    
   } catch (err: any) {
     if (err.writeErrors) {
-      console.warn(`${err.writeErrors.length} emails failed. Retrying individually...`);
+      console.warn(
+        `${err.writeErrors.length} emails failed. Retrying individually...`
+      );
 
       for (const writeError of err.writeErrors) {
         const failedEmail = writeError.getOperation();
@@ -100,9 +110,8 @@ export async function getEmailsByProject(projectId: string) {
 
 // Escape any special characters in a string to safely use in a regular expression
 function escapeRegex(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-
 
 /**
  * Builds a filter object for regex inclusion/exclusion. This is a helper function to query emails
@@ -112,7 +121,7 @@ function escapeRegex(string: string) {
 function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
   const filter: any = {};
 
-   if (include?.length) {
+  if (include?.length) {
     const includePattern = include.map(escapeRegex).join("|");
     filter.$regex = new RegExp(includePattern, "i");
   }
@@ -153,9 +162,7 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
 
   const emails = await Email.find({ projectId, isProcessed: false }).sort({ date: -1 });
 
-  
-
-  return emails;
+   return emails;
 }
 
 /**
@@ -169,15 +176,28 @@ export async function fetchInboxEmails(projectId: string) {
   if (!project) throw new Error("Project not found");
 
   const filters = project.filters || [];
-  const lastSync = project.lastEmailSync
-  const emails = await Email.find({ 
+  const lastSync = project.lastEmailSync;
+  const emails = await Email.find({
     projectId,
-    date: { $lte: lastSync }
+    date: { $lte: lastSync },
   }).sort({ date: -1 });
-  const inboxEmails = emails.filter(email => {
+  const inboxEmails = emails.filter((email) => {
     const fromEmail = extractEmailAddress(email.from);
     return filters.includes(fromEmail);
   });
 
   return inboxEmails;
+}
+
+export async function assignOpportunityToEmail(
+  emailId: Types.ObjectId,
+  oppoId: Types.ObjectId
+) {
+  const updated = await Email.findByIdAndUpdate(
+    emailId,
+    { $set: { opportunityId: oppoId } },
+    { new: true }
+  );
+  if (!updated) throw new Error("Email not found");
+  return updated;
 }

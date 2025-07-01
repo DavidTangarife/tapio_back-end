@@ -130,8 +130,9 @@ function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
  * If no angle brackets are found, trims and returns the original string.
  */
 function extractEmailAddress(from: string): string {
+  if (!from) return "";
   const match = from.match(/<(.+)>/);
-  return match ? match[1] : from.trim();
+  return (match ? match[1] : from).trim().toLowerCase();
 }
 
 /**

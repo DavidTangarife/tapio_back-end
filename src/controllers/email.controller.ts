@@ -170,9 +170,14 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
   }
 }
 
+/**
+ * Extracts just the email address from a "name <email>" format.
+ * If no angle brackets are found, trims and returns the original string.
+ */
 function extractEmailAddress(from: string): string {
+    if (!from) return "";
     const match = from.match(/<(.+)>/);
-    return match ? match[1] : from.trim();
+    return (match ? match[1] : from).trim().toLowerCase();
   }
 
 /**

@@ -33,33 +33,12 @@ export async function saveEmailsFromIMAP(
   }
 
   try {
-<<<<<<< HEAD
-=======
-    await Email.insertMany(newEmails);
-    console.log(`Inserted ${newEmails.length} emails`);
-
->>>>>>> main
     const project = await Project.findById(projectId);
     if (!project) {
       console.error("Project not found");
       return;
     }
-
-    // Extract only email addresses (e.g., 'no-reply@x.com')
-    const rawSenders = newEmails
-      .map((email) => {
-        const from = email.from;
-        if (typeof from === "string") {
-          return extractEmailAddress(from);
-        } else if (from?.value?.[0]?.address) {
-          return from.value[0].address.trim(); // handle object format
-        } else {
-          return "";
-        }
-      })
-      .filter(Boolean); // remove empty strings
-
-    // const uniqueNewSenders = [...new Set(rawSenders)];
+    
     let existingFilters = project.filters ?? [];
     let existingBlocked = project.blocked ?? [];
     newEmails.forEach(e => {
@@ -67,18 +46,14 @@ export async function saveEmailsFromIMAP(
       if (existingFilters.includes(senderEmail)){
         e.isApproved= true;
         e.isProcessed = true;
-        // existingFilters = [...existingFilters, extractEmailAddress(e.from)]
+
       } else if (existingBlocked.includes(senderEmail)) {
         e.isApproved = false;
         e.isProcessed = true;
-        // existingBlocked = [...existingBlocked, extractEmailAddress(e.from)]
       }
     })
     await Email.insertMany(newEmails);
     console.log(`Inserted ${newEmails.length} emails`);
-    // Merge unique values
-    // const combined = [...new Set([...existingFilters, ...uniqueNewSenders])];
-    // project.filters = combined;
 
     await project.save();
     console.log("Project filters updated with new senders.");
@@ -157,12 +132,9 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
 
-  // const approved_senders = project.filters || [];
-  // const blocked_senders = project.blocked || [];
-
   const emails = await Email.find({ projectId, isProcessed: false }).sort({ date: -1 });
 
-   return emails;
+  return emails;
 }
 
 /**

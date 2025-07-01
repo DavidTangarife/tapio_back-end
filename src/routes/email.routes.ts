@@ -10,7 +10,7 @@ import {
   updateTapIn,
   processAndApprove,
   getAllowedEmails,
-  getBlockedEmails
+  getBlockedEmails,
   emailAssignOpportunity,
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
@@ -19,11 +19,10 @@ const router = express.Router();
 
 router.get("/getemails", requireAuth, getInboxEmails);
 router.post("/direct-emails", requireAuth, directEmails);
-router.post("/fetch-emails", requireAuth, fetchEmailsController);
+// router.post("/fetch-emails", requireAuth, fetchEmailsController);
 router.get("/unprocessed-emails", requireAuth, getEmailsForFiltering);
 router.get("/allowed-emails", requireAuth, getAllowedEmails);
 router.get("/blocked-emails", requireAuth, getBlockedEmails);
-
 router.patch("/emails/:emailId/tap", requireAuth, updateTapIn);
 router.patch("/emails/:emailId/read", requireAuth, updateIsRead);
 router.get("/emails/:emailId/body", requireAuth, getEmailBody);

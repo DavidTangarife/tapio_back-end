@@ -9,12 +9,9 @@ import {
   updateIsRead,
   updateTapIn,
   processAndApprove,
-<<<<<<< HEAD
   getAllowedEmails,
   getBlockedEmails
-=======
   emailAssignOpportunity,
->>>>>>> main
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
 

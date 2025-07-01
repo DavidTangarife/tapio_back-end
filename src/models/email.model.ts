@@ -4,7 +4,6 @@ import {
   Document,
   Types,
   Model,
-  WithoutUndefined,
 } from "mongoose";
 
 export interface IEmail extends Document {
@@ -78,7 +77,7 @@ const emailSchema = new Schema<IEmail>({
 }
 );
 
-// emailSchema.index({ mailBoxId: 1, projectId: 1 }, { unique: true });
+emailSchema.index({ subject: "text", from: "text" });
 
 // Instance method
 emailSchema.methods.updateStatus = async function (

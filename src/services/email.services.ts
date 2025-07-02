@@ -181,9 +181,9 @@ export async function searchEmail(projectId: string, query: string) {
   if (!query.trim()) return [];
   return Email.find({
     projectId,
-    $text: { $search : query}
-  },
-  {
-    score: { $meta: "textScore "} // sort by relevance
-  }).sort({ score: { $meta: "textScore"}})
+    $or: [
+      { subject: { $regex: query, $options: "i" } },
+      { from: { $regex: query, $options: "i" } },
+    ]
+  })
 }

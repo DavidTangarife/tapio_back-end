@@ -77,7 +77,9 @@ const emailSchema = new Schema<IEmail>({
 }
 );
 
-emailSchema.index({ subject: "text", from: "text" });
+// emailSchema.index({ subject: "text", from: "text" });
+emailSchema.index({ subject: 1 })
+emailSchema.index({ from: 1 })
 
 // Instance method
 emailSchema.methods.updateStatus = async function (

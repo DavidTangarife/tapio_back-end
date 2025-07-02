@@ -386,18 +386,20 @@ export const emailAssignOpportunity = async (
  * Search email model for a specific title or sender
  */
 
-export async function fetchSearchedEmails (req: Request, res: Response) {
-  const { query } = req.query;
+export async function fetchSearchedEmails (req: Request, res: Response): Promise<any> {
+  const { q } = req.query;
   const projectId = req.session.project_id;
+  console.log(q)
 
-  if (typeof query !== "string") {
+  if (typeof q !== "string") {
     return res.status(400).json({ error: "Invlid search query"})
   }
 
   try {
-    const results = await searchEmail(projectId, query);
+    const results = await searchEmail(projectId, q);
     return res.json({ emails: results})
   } catch (err) {
+    console.error("Search error:", err);
     return res.status(500).json({error: "Search failed."});
   }
 }

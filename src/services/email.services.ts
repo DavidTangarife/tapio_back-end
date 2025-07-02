@@ -197,3 +197,7 @@ export async function assignOpportunityToEmail(
   if (!updated) throw new Error("Email not found");
   return updated;
 }
+
+export async function getEmailsByOppoId(projectId: Types.ObjectId) {
+  return await Email.findByOppoId(new Types.ObjectId(projectId));
+}

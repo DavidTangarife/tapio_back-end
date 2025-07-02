@@ -49,6 +49,7 @@ export interface IEmail extends Document {
 // Static methods type
 interface IEmailModel extends Model<IEmail> {
   findByProjectId: (projectId: Types.ObjectId) => Promise<IEmail | null>;
+  findByOppoId: (projectId: Types.ObjectId) => Promise<IEmail | null>;
 }
 
 const emailSchema = new Schema<IEmail>(
@@ -100,11 +101,18 @@ emailSchema.methods.updateStatus = async function (
   await this.save();
 };
 
-// Static method
+// Static method email by project
 emailSchema.statics.findByProjectId = async function (
   projectId: Types.ObjectId
 ) {
   return this.find({ projectId });
+};
+
+// Static method emails by opportunity
+emailSchema.statics.findByOppoId = async function (
+  opportunityId: Types.ObjectId
+) {
+  return this.find({ opportunityId });
 };
 
 emailSchema.post("save", function (doc) {

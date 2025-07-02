@@ -9,13 +9,16 @@ interface ISchema extends Document {
   updatedAt: Date;
 }
 
-const statusSchema = new Schema<ISchema>({
-  projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
-  title: { type: String, required: true, trim: true },
-  order: { type: Number},
-  color: { type: String, default: "gray" },
-}, {
-  timestamps: true
-});
+const statusSchema = new Schema<ISchema>(
+  {
+    projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    title: { type: String, required: true, trim: true },
+    order: { type: Number },
+    color: { type: String, default: "gray" },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 export default model<ISchema>("Status", statusSchema);

@@ -10,6 +10,7 @@ import {
   updateTapIn,
   processAndApprove,
   emailAssignOpportunity,
+  emailsFromOpportunity,
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
 
@@ -25,5 +26,6 @@ router.get("/emails/:emailId/body", requireAuth, getEmailBody);
 router.get("/emails/:emailId", requireAuth, getEmailData);
 router.patch("/emails/:emailId/process", requireAuth, processAndApprove);
 router.patch("/emails/:emailId/oppo", requireAuth, emailAssignOpportunity);
+router.get("/getemails/:oppoId", requireAuth, emailsFromOpportunity);
 
 export default router;

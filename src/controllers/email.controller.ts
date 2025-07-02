@@ -8,6 +8,7 @@ import {
   getFilterableEmails,
   saveEmailsFromIMAP,
   assignOpportunityToEmail,
+  getEmailsByOppoId,
 } from "../services/email.services";
 import {
   get_imap_connection,
@@ -117,11 +118,11 @@ export const directEmails = async (
   } catch (err: any) {
     next(err);
   }
-}
+};
 
 /**
  * Controller to handle inbox email retrieval for a project.
- * 
+ *
  * @route GET /api/getemails
  * @param req - Express request object, must contain a valid session with project_id.
  * @param res - Express response object used to send back the filtered emails.
@@ -208,13 +209,16 @@ function extractEmailAddress(from: string): string {
 /**
  * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
  * used inside the filter component
- * 
+ *
  * @route PATCH /api/emails/:emailId/process
  * @param req - Express request object containing the email ID in `req.params`.
  * @param res - Express response object used to send the updated email or error.
  * @returns  Returns JSON with the updated email object if successful, or anerror message
  */
-export async function processAndApprove (req: Request, res: Response): Promise<any> {
+export async function processAndApprove(
+  req: Request,
+  res: Response
+): Promise<any> {
   const { isApproved } = req.body;
   const { emailId } = req.params;
   const projectId = req.session.project_id;
@@ -243,7 +247,6 @@ export async function processAndApprove (req: Request, res: Response): Promise<a
     res.status(500).json({ error: "Failed to mark email as read" });
   }
 }
-
 
 /**
  * Controller to get email body for a specific emaildid.
@@ -307,7 +310,7 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
     console.error("Failed to get email body:", err);
     return res.status(500).json({ error: "Failed to get email body" });
   }
-};
+}
 
 /**
  * Controller to get specific email data from database and return email object
@@ -365,6 +368,28 @@ export const emailAssignOpportunity = async (
     return res.status(200).json(updatedEmail);
   } catch (err: any) {
     console.error("Error assigning opportunity to email:", err.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const emailsFromOpportunity = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { oppoId } = req.params;
+
+  if (!oppoId) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const emails = await getEmailsByOppoId(new Types.ObjectId(oppoId));
+    return res.status(200).json(emails);
+  } catch (err: any) {
+    console.error(
+      "Error retrieving emails from that opportunity:",
+      err.message
+    );
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };

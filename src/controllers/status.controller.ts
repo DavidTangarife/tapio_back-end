@@ -109,3 +109,15 @@ export const updateStatusColumnName = async (req: Request, res: Response, next: 
     console.log(error)
   }
 }
+
+export const newStatusColumn = async (req: Request, res: Response, next: NextFunction) => {
+  const projectId = req.session.project_id;
+  const title = req.body.title
+  try {
+    const status = await createStatus({ projectId, title })
+    console.log('Created Status')
+    res.status(200).json({ message: 'Created Status', status: status })
+  } catch (err) {
+    next(err)
+  }
+}

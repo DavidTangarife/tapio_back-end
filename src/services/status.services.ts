@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 interface CreateStatusInput {
   projectId: Types.ObjectId;
   title: string;
-  color: string;
+  color?: string;
 }
 
 /* Create and return a new project */

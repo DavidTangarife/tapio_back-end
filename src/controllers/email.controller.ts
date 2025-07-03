@@ -6,75 +6,70 @@ import { NextFunction, Request, Response } from "express";
 import {
   fetchInboxEmails,
   getFilterableEmails,
-  saveEmailsFromIMAP,
   assignOpportunityToEmail,
   getEmailsByOppoId,
+  searchEmail,
 } from "../services/email.services";
-import {
-  get_imap_connection,
-  sender_and_subject_since_date_callback,
-} from "../services/imap";
 import { Types } from "mongoose";
-import { get_xoauth2_generator, get_xoauth2_token } from "../services/xoauth2";
 import { getGoogleEmailsByDate } from "./google.controller";
 import { getMicrosoftEmailsByDate } from "./microsoft.controller";
 import { get_google_auth_client } from "../services/google";
 import { google } from "googleapis";
 import { getUserById } from "../services/user.services";
 
-export const fetchEmailsController = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  console.log("fetchEmailsController called");
-  try {
-    const { projectId } = req.body;
-    console.log(new Types.ObjectId(String(projectId)));
-    const userId = req.session.user_id;
-    console.log(userId);
-    if (!userId || !projectId) {
-      return res.status(400).json({ error: "Missing userId or projectId" });
-    }
+// export const fetchEmailsController = async (
+//   req: Request,
+//   res: Response
+// ): Promise<any> => {
+//   console.log("fetchEmailsController called");
+//   try {
+//     const { projectId } = req.body;
+//     console.log(new Types.ObjectId(String(projectId)));
+//     const userId = req.session.user_id;
+//     console.log(userId);
+//     if (!userId || !projectId) {
+//       return res.status(400).json({ error: "Missing userId or projectId" });
+//     }
 
-    const user = await User.findById(userId);
-    if (!user || !user.email || !user.refresh_token) {
-      return res.status(401).json({ error: "Email account not connected" });
-    }
+//     const user = await User.findById(userId);
+//     if (!user || !user.email || !user.refresh_token) {
+//       return res.status(401).json({ error: "Email account not connected" });
+//     }
 
-    if (!projectId) return res.status(400).json({ error: "Missing projectId" });
+//     if (!projectId) return res.status(400).json({ error: "Missing projectId" });
 
-    // Find the project to get createdAt date
-    const project = await Project.findById(
-      new Types.ObjectId(String(projectId))
-    );
-    if (!project) return res.status(404).json({ error: "Project not found" });
-    console.log(project);
-    const xoauth2gen = get_xoauth2_generator(user.email, user.refresh_token);
-    const xoauth2Token = await get_xoauth2_token(xoauth2gen);
-    const imap = get_imap_connection(user.email, xoauth2Token);
-    console.log("imap connected");
-    const dateStr = project.startDate.toLocaleDateString("en-US", {
-      month: "long",
-      day: "2-digit",
-      year: "numeric",
-    });
-    console.log(dateStr);
-    const emails: any = sender_and_subject_since_date_callback(
-      imap,
-      dateStr,
-      projectId,
-      async (emails) => {
-        console.log("Fetched emails:", emails);
-        await saveEmailsFromIMAP(emails);
-        res.status(201).json(emails);
-      }
-    );
-    console.log(emails);
-  } catch (error) {
-    console.error("Error fetching emails:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     // Find the project to get createdAt date
+//     const project = await Project.findById(
+//       new Types.ObjectId(String(projectId))
+//     );
+//     if (!project) return res.status(404).json({ error: "Project not found" });
+//     console.log(project);
+//     const xoauth2gen = get_xoauth2_generator(user.email, user.refresh_token);
+//     const xoauth2Token = await get_xoauth2_token(xoauth2gen);
+//     const imap = get_imap_connection(user.email, xoauth2Token);
+//     console.log("imap connected");
+//     const dateStr = project.startDate.toLocaleDateString("en-US", {
+//       month: "long",
+//       day: "2-digit",
+//       year: "numeric",
+//     });
+//     console.log(dateStr);
+//     const emails: any = sender_and_subject_since_date_callback(
+//       imap,
+//       dateStr,
+//       projectId,
+//       async (emails) => {
+//         console.log("Fetched emails:", emails);
+//         await saveEmailsFromIMAP(emails);
+//         res.status(201).json(emails);
+//       }
+//     );
+//     console.log(emails);
+//   } catch (error) {
+//     console.error("Error fetching emails:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
 /**
  * Controller to return a summary list of email senders for filtering.
@@ -293,17 +288,34 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
     const payload = gmailRes.data.payload;
 
     // Try to get the html body
-    const part =
-      payload?.parts?.find((part) => part.mimeType === "text/html") || payload;
+    // const part =
+    //   payload?.parts?.find((part) => part.mimeType === "text/html") || payload;
 
-    const bodyData = part?.body?.data;
-
-    if (!bodyData) {
-      return res.status(404).json({ error: "No body found in this email" });
+    function findHtmlPart(parts: any[]): string | null {
+      for (const part of parts) {
+        if (part.mimeType === "text/html" && part.body?.data) {
+          return part.body.data;
+        }
+        if (part.parts) {
+          const result = findHtmlPart(part.parts);
+          if (result) return result;
+        }
+      }
+      return null;
     }
+    const htmlData = payload?.parts ? findHtmlPart(payload.parts) : payload?.body?.data;
+    if (!htmlData) return res.status(404).json({ error: "No HTML body found" });
 
-    // Decode Base64
-    const decodedBody = Buffer.from(bodyData, "base64").toString("utf-8");
+    const decodedBody = Buffer.from(htmlData, "base64").toString("utf-8");
+
+    // const bodyData = part?.body?.data;
+
+    // if (!bodyData) {
+    //   return res.status(404).json({ error: "No body found in this email" });
+    // }
+
+    // // Decode Base64
+    // const decodedBody = Buffer.from(bodyData, "base64").toString("utf-8");
 
     return res.status(200).json({ body: decodedBody });
   } catch (err) {
@@ -393,3 +405,25 @@ export const emailsFromOpportunity = async (
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+/**
+ * Search email model for a specific title or sender
+ */
+
+export async function fetchSearchedEmails (req: Request, res: Response): Promise<any> {
+  const { q } = req.query;
+  const projectId = req.session.project_id;
+  console.log(q)
+
+  if (typeof q !== "string") {
+    return res.status(400).json({ error: "Invlid search query"})
+  }
+
+  try {
+    const results = await searchEmail(projectId, q);
+    return res.json({ emails: results})
+  } catch (err) {
+    console.error("Search error:", err);
+    return res.status(500).json({error: "Search failed."});
+  }
+}

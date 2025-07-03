@@ -1,7 +1,6 @@
 import express from "express";
 import {
   directEmails,
-  fetchEmailsController,
   getEmailBody,
   getEmailData,
   getEmailsForFiltering,
@@ -13,6 +12,7 @@ import {
   getBlockedEmails,
   emailAssignOpportunity,
   emailsFromOpportunity,
+  fetchSearchedEmails,
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
 
@@ -31,5 +31,6 @@ router.get("/emails/:emailId", requireAuth, getEmailData);
 router.patch("/emails/:emailId/process", requireAuth, processAndApprove);
 router.patch("/emails/:emailId/oppo", requireAuth, emailAssignOpportunity);
 router.get("/getemails/:oppoId", requireAuth, emailsFromOpportunity);
+router.get("/search", requireAuth, fetchSearchedEmails);
 
 export default router;

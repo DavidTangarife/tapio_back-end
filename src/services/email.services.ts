@@ -177,3 +177,16 @@ export async function assignOpportunityToEmail(
 export async function getEmailsByOppoId(projectId: Types.ObjectId) {
   return await Email.findByOppoId(new Types.ObjectId(projectId));
 }
+/**
+ * 
+ */
+export async function searchEmail(projectId: string, query: string) {
+  if (!query.trim()) return [];
+  return Email.find({
+    projectId,
+    $or: [
+      { subject: { $regex: query, $options: "i" } },
+      { from: { $regex: query, $options: "i" } },
+    ]
+  })
+}

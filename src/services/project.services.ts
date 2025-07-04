@@ -114,3 +114,18 @@ export async function deleteProjectAndEmails(projectId: Types.ObjectId | string)
   await Opportunity.deleteMany({ projectId });
   await Project.findByIdAndDelete(projectId);
 }
+
+/**
+ * Changes the inboxconnected in project to true after first email connection
+ * @param _id project id
+ */
+export async function inboxConnected(_id: string) {
+  const project = await Project.findOne({ _id });
+
+  if (!project) {
+    console.log('Failed to connect project\'s inbox')
+  } else {
+    project.inboxConnected = true;
+    await project.save();
+  }
+}

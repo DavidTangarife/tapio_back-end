@@ -60,17 +60,6 @@ export async function onboardUser(_id: string, project_id: string) {
 
 }
 
-export async function emailsConnected(_id: string) {
-  const user = await User.findOne({ _id });
-
-  if (!user) {
-    console.log('Failed to connect user\'s inbox')
-  } else {
-    user.inboxConnected = true;
-    await user.save();
-  }
-}
-
 /* Update full name after user has authenticated */
 export async function updateUserFullName(userId: string | Types.ObjectId, fullName: string): Promise<IUser> {
   const user = await User.findById(userId);

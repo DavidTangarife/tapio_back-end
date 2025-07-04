@@ -10,7 +10,6 @@ export interface IUser extends Document {
   updatedAt: Date;
   lastProject?: string;
   onBoarded: boolean;
-  inboxConnected: boolean;
 
   updateFullName(newName: string): Promise<void>;
 }
@@ -39,9 +38,6 @@ const userSchema = new Schema<IUser>({
   onBoarded: {
     type: Boolean
   },
-  inboxConnected: {
-    type: Boolean
-  }
 }, {
   timestamps: true
 }

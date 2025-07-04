@@ -10,7 +10,7 @@ import Project from "../models/project.model";
  */
 export async function saveEmailsFromIMAP(
   parsedEmailArray: any[]
-): Promise<void> {
+): Promise<number | any> {
   console.log(parsedEmailArray);
   if (!Array.isArray(parsedEmailArray) || parsedEmailArray.length === 0) {
     console.warn("No emails to save.");
@@ -54,9 +54,10 @@ export async function saveEmailsFromIMAP(
     })
     await Email.insertMany(newEmails);
     console.log(`Inserted ${newEmails.length} emails`);
-
+    
     await project.save();
     console.log("Project filters updated with new senders.");
+    return newEmails.length;
   } catch (err: any) {
     if (err.writeErrors) {
       console.warn(

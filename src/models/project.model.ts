@@ -10,6 +10,7 @@ export interface IProject extends Document {
   filters: string[];
   blocked: string[];
   lastEmailSync?: Date;
+  inboxConnected: boolean;
   createdAt: Date;
   updatedAt: Date;
   // Instance method
@@ -27,7 +28,8 @@ const projectSchema = new Schema<IProject>({
   startDate: { type: Date, required: true },
   filters: [{ type: String }],
   blocked: [{ type: String }],
-  lastEmailSync: { type: Date }
+  lastEmailSync: { type: Date },
+  inboxConnected: {type: Boolean, default: false}
 }, {
     timestamps: true
   }

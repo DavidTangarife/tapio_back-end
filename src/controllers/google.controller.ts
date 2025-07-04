@@ -9,14 +9,11 @@ import { parse } from "url";
 import { OAuth2Client } from "googleapis-common";
 import { setState, checkState } from "../services/state";
 import {
-  emailsConnected,
   findOrCreateUserFromGoogle,
   getUserById,
 } from "../services/user.services";
-import { Types } from "mongoose";
-import { getEmailsByProject, saveEmailsFromIMAP } from "../services/email.services";
-import { getProjectById, updateLastSync } from "../services/project.services";
-import { getInboxEmails } from "./email.controller";
+import { saveEmailsFromIMAP } from "../services/email.services";
+import { getProjectById, inboxConnected, updateLastSync } from "../services/project.services";
 
 const google_client: OAuth2Client = get_google_auth_client(
   "http://localhost:3000/api/google-redirect"
@@ -63,7 +60,7 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
   }
 };
 
-export const getGoogleEmailsByDate = async (req: Request, res: Response, next: NextFunction) => {
+export const getGoogleEmailsByDate = async (req: Request, res: Response, next: NextFunction): Promise<number | any> => {
   const user_id = req.session.user_id;
   const project_id = req.session.project_id;
 
@@ -78,18 +75,20 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
  if (!user_account || !project) {
     return res.status(404).json({ error: "User or project not found" });
   }
-
   const baseDate = project.lastEmailSync ?? project.startDate;
   const fetchStartDate = new Date(new Date(baseDate).getTime() - 60 * 1000);
 
   // Fetch emails
   const emails = await getGmailApi(user_account.refresh_token || "", project_id, fetchStartDate);
+  let savedCount = 0;
   if (emails && emails.length > 0) {
-    await saveEmailsFromIMAP(emails);
-    await emailsConnected(user_id);
+    savedCount = await saveEmailsFromIMAP(emails);
+    if (savedCount > 0){
+      await inboxConnected(project_id);
+    }
   } else {
     console.log("Gmail API returned 0 emails.");
   }
   await updateLastSync(project_id);
-  return getInboxEmails(req, res);
+  return savedCount || 0;
 };

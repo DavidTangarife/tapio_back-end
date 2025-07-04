@@ -1,6 +1,4 @@
 import Email from "../models/email.model";
-import Project from "../models/project.model";
-import User from "../models/user.model";
 
 import { NextFunction, Request, Response } from "express";
 import {
@@ -16,60 +14,7 @@ import { getMicrosoftEmailsByDate } from "./microsoft.controller";
 import { get_google_auth_client } from "../services/google";
 import { google } from "googleapis";
 import { getUserById } from "../services/user.services";
-
-// export const fetchEmailsController = async (
-//   req: Request,
-//   res: Response
-// ): Promise<any> => {
-//   console.log("fetchEmailsController called");
-//   try {
-//     const { projectId } = req.body;
-//     console.log(new Types.ObjectId(String(projectId)));
-//     const userId = req.session.user_id;
-//     console.log(userId);
-//     if (!userId || !projectId) {
-//       return res.status(400).json({ error: "Missing userId or projectId" });
-//     }
-
-//     const user = await User.findById(userId);
-//     if (!user || !user.email || !user.refresh_token) {
-//       return res.status(401).json({ error: "Email account not connected" });
-//     }
-
-//     if (!projectId) return res.status(400).json({ error: "Missing projectId" });
-
-//     // Find the project to get createdAt date
-//     const project = await Project.findById(
-//       new Types.ObjectId(String(projectId))
-//     );
-//     if (!project) return res.status(404).json({ error: "Project not found" });
-//     console.log(project);
-//     const xoauth2gen = get_xoauth2_generator(user.email, user.refresh_token);
-//     const xoauth2Token = await get_xoauth2_token(xoauth2gen);
-//     const imap = get_imap_connection(user.email, xoauth2Token);
-//     console.log("imap connected");
-//     const dateStr = project.startDate.toLocaleDateString("en-US", {
-//       month: "long",
-//       day: "2-digit",
-//       year: "numeric",
-//     });
-//     console.log(dateStr);
-//     const emails: any = sender_and_subject_since_date_callback(
-//       imap,
-//       dateStr,
-//       projectId,
-//       async (emails) => {
-//         console.log("Fetched emails:", emails);
-//         await saveEmailsFromIMAP(emails);
-//         res.status(201).json(emails);
-//       }
-//     );
-//     console.log(emails);
-//   } catch (error) {
-//     console.error("Error fetching emails:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
+import { getProjectById } from "../services/project.services";
 
 /**
  * Controller to return a summary list of email senders for filtering.
@@ -96,20 +41,22 @@ export const directEmails = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<any> => {
   try {
     console.log("Directing");
     const user_id = req.session.user_id;
     const user = await getUserById(user_id);
 
     if (!user) {
-      res.redirect("http://localhost:5173/");
+      return  res.redirect("http://localhost:5173/");
     }
+    let fetchedCount = 0;
     if (user!.refresh_token) {
-      getGoogleEmailsByDate(req, res, next);
+      fetchedCount = await getGoogleEmailsByDate(req, res, next) || 0;
     } else if (user!.token_cache) {
-      getMicrosoftEmailsByDate(req, res, next);
+      fetchedCount = await getMicrosoftEmailsByDate(req, res, next) || 0;
     }
+    return res.status(200).json({ message: "Fetched emails", count: fetchedCount });
   } catch (err: any) {
     next(err);
   }
@@ -128,10 +75,13 @@ export async function getInboxEmails(
   res: Response
 ): Promise<void> {
   const projectId = req.session.project_id;
-
+  const project = await getProjectById(projectId);
   try {
     const inboxEmails = await fetchInboxEmails(projectId);
-    res.json({ emails: inboxEmails });
+    res.json({ 
+      emails: inboxEmails,
+      inboxConnected: project?.inboxConnected ?? false,
+    });
   } catch (error: any) {
     console.error("Error in getInboxEmails:", error);
     res.status(500).json({ error: "Server error" });

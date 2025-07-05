@@ -192,6 +192,31 @@ export async function processAndApprove(
     res.status(500).json({ error: "Failed to mark email as read" });
   }
 }
+/**
+ * Controller to update the `opportunityId` property of an email object.
+ * used inside the AddToBoard component in frontend.
+ *
+ * @route PATCH /api/emails/:emailId/opportunity
+ * @param req - Express request object containing the email ID in req.body.
+ * @param res - Express response object used to send the updated email or error.
+ * @returns  Returns JSON with the updated email object if successful, or an error message
+ */
+export async function updateOpportunityId(req: Request, res: Response): Promise<any> {
+  const { emailId, opportunityId } = req.body;
+
+  try {
+    const email = await Email.findById(emailId);
+    if (!email) return res.status(404).json({ error: "Email not found" });
+
+    email.opportunityId = opportunityId;
+    await email.save();
+
+    res.json(email);
+  } catch (err) {
+    console.error("Failed to mark email as read:", err);
+    res.status(500).json({ error: "Failed to mark email as read" });
+  }
+}
 
 /**
  * Controller to get email body for a specific emaildid.

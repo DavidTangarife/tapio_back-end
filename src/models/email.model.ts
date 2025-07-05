@@ -8,7 +8,7 @@ import {
 
 export interface IEmail extends Document {
   projectId: Types.ObjectId;
-  opportunityId: Types.ObjectId;
+  opportunityId?: Types.ObjectId;
   mailBoxId: string;
   subject: string;
   snippet: string;
@@ -54,7 +54,7 @@ interface IEmailModel extends Model<IEmail> {
 
 const emailSchema = new Schema<IEmail>({
   projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
-  // opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
+  opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
   mailBoxId: { type: String, unique: [true, 'Email must be unique'] },
   subject: { type: String },
   snippet: { type: String, required: false },

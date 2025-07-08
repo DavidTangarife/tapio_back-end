@@ -13,6 +13,7 @@ import {
   emailAssignOpportunity,
   emailsFromOpportunity,
   fetchSearchedEmails,
+  updateOpportunityId
 } from "../controllers/email.controller";
 import requireAuth from "../middleware/require-auth";
 
@@ -31,5 +32,6 @@ router.patch("/emails/:emailId/process", requireAuth, processAndApprove);
 router.patch("/emails/:emailId/oppo", requireAuth, emailAssignOpportunity);
 router.get("/getemails/:oppoId", requireAuth, emailsFromOpportunity);
 router.get("/search", requireAuth, fetchSearchedEmails);
+router.patch("/emails/:emailId/opportunity", requireAuth, updateOpportunityId);
 
 export default router;

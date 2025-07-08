@@ -20,7 +20,6 @@ const router = express.Router();
 
 router.get("/getemails", requireAuth, getInboxEmails);
 router.post("/direct-emails", requireAuth, directEmails);
-// router.post("/fetch-emails", requireAuth, fetchEmailsController);
 router.get("/unprocessed-emails", requireAuth, getEmailsForFiltering);
 router.get("/allowed-emails", requireAuth, getAllowedEmails);
 router.get("/blocked-emails", requireAuth, getBlockedEmails);

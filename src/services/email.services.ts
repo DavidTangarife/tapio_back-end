@@ -1,6 +1,7 @@
 import Email from "../models/email.model";
 import { Types } from "mongoose";
 import Project from "../models/project.model";
+import { inboxConnected } from "./project.services";
 
 /**
  * Saves an array of parsed email objects to the database in a single bulk insert.
@@ -144,22 +145,58 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
  * @param projectId - The ID of the project whose emails to fetch.
  * @returns Filtered list of emails considered part of the inbox.
  */
-export async function fetchInboxEmails(projectId: string) {
+export async function fetchInboxEmails(
+  projectId: string,
+  pageUnread = 1,
+  limitUnread = 10,
+  pageRead = 1,
+  limitRead = 10  
+) {
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
 
   const filters = project.filters || [];
   const lastSync = project.lastEmailSync;
-  const emails = await Email.find({
+  const allEmails = await Email.find({
     projectId,
     date: { $lte: lastSync },
   }).sort({ date: -1 });
-  const inboxEmails = emails.filter((email) => {
+  const filteredEmails = allEmails.filter((email) => {
     const fromEmail = extractEmailAddress(email.from);
     return filters.includes(fromEmail);
   });
 
-  return inboxEmails;
+  const tapped = filteredEmails.filter((e) => e.isTapped);
+  const unreadFiltered = filteredEmails.filter((e) =>  !e.isRead && !e.isTapped);
+  const readFiltered = filteredEmails.filter((e) => e.isRead && !e.isTapped);
+  
+  const unreadEmails = unreadFiltered.slice(
+    (pageUnread - 1) * limitUnread,
+    pageUnread * limitUnread
+  );
+
+  const readEmails = readFiltered.slice(
+    (pageRead - 1) * limitRead,
+    pageRead * limitRead
+  );
+
+  return {
+    tapped,
+    unread: {
+      emails: unreadEmails,
+      total: unreadFiltered.length,
+      page: pageUnread,
+      pages: Math.ceil(unreadFiltered.length / limitUnread),
+    },
+    read: {
+      emails: readEmails,
+      total: readFiltered.length,
+      page: pageRead,
+      pages: Math.ceil(readFiltered.length / limitRead),
+    },
+    inboxConnected: project.inboxConnected
+  }
+
 }
 
 export async function assignOpportunityToEmail(
@@ -185,6 +222,7 @@ export async function searchEmail(projectId: string, query: string) {
   if (!query.trim()) return [];
   return Email.find({
     projectId,
+    isApproved: true,
     $or: [
       { subject: { $regex: query, $options: "i" } },
       { from: { $regex: query, $options: "i" } },

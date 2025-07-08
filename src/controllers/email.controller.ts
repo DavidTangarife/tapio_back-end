@@ -75,13 +75,26 @@ export async function getInboxEmails(
   res: Response
 ): Promise<void> {
   const projectId = req.session.project_id;
-  const project = await getProjectById(projectId);
+  if (!projectId) {
+    res.status(400).json({ error: "No project selectd"});
+    return;
+  }
+
+  const pageUnread = parseInt(req.query.unread as string) || 1;
+  const pageRead = parseInt(req.query.read as string) || 1;
+
+  const limitUnread = parseInt( req.query.limitUnread as string) || 10;
+  const limitRead = parseInt( req.query.limitRead as string) || 10;
+
   try {
-    const inboxEmails = await fetchInboxEmails(projectId);
-    res.json({ 
-      emails: inboxEmails,
-      inboxConnected: project?.inboxConnected ?? false,
-    });
+    const data = await fetchInboxEmails(
+      projectId,
+      pageUnread,
+      limitUnread,
+      pageRead,
+      limitRead
+    );
+    res.json(data);
   } catch (error: any) {
     console.error("Error in getInboxEmails:", error);
     res.status(500).json({ error: "Server error" });
@@ -237,10 +250,6 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
 
     const payload = gmailRes.data.payload;
 
-    // Try to get the html body
-    // const part =
-    //   payload?.parts?.find((part) => part.mimeType === "text/html") || payload;
-
     function findHtmlPart(parts: any[]): string | null {
       for (const part of parts) {
         if (part.mimeType === "text/html" && part.body?.data) {
@@ -257,15 +266,6 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
     if (!htmlData) return res.status(404).json({ error: "No HTML body found" });
 
     const decodedBody = Buffer.from(htmlData, "base64").toString("utf-8");
-
-    // const bodyData = part?.body?.data;
-
-    // if (!bodyData) {
-    //   return res.status(404).json({ error: "No body found in this email" });
-    // }
-
-    // // Decode Base64
-    // const decodedBody = Buffer.from(bodyData, "base64").toString("utf-8");
 
     return res.status(200).json({ body: decodedBody });
   } catch (err) {
@@ -310,6 +310,7 @@ export async function getBlockedEmails(req: Request, res: Response): Promise<any
   const emails = await Email.find({ projectId, isApproved: false}). sort({ date: -1});
   res.json({ emails });
 }
+
 // Assign OpportunityId to an email
 export const emailAssignOpportunity = async (
   req: Request,
@@ -359,7 +360,6 @@ export const emailsFromOpportunity = async (
 /**
  * Search email model for a specific title or sender
  */
-
 export async function fetchSearchedEmails (req: Request, res: Response): Promise<any> {
   const { q } = req.query;
   const projectId = req.session.project_id;
@@ -377,3 +377,4 @@ export async function fetchSearchedEmails (req: Request, res: Response): Promise
     return res.status(500).json({error: "Search failed."});
   }
 }
+

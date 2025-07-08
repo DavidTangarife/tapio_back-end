@@ -10,7 +10,11 @@ import requireAuth from "../middleware/require-auth";
 
 const router = express.Router();
 
-router.post("/opportunity/from-email", requireAuth, createOpportunityController);
+router.post(
+  "/opportunity/from-email",
+  requireAuth,
+  createOpportunityController
+);
 router.get("/opportunity", requireAuth, getOpportunitiesByProjectController);
 router.patch("/opportunity/:opportunityId", updateOpportunityStateController);
 router.patch("/opportunity/:opportunityId/full", UpdateOpportunityById);

@@ -84,7 +84,7 @@ export async function getEmailsForFiltering(
   try {
     const project_id = req.session.project_id;
     const senders = await getFilterableEmails(project_id);
-    console.log("not processed emails", senders)
+    console.log("not processed emails", senders);
     res.status(200).json(senders);
   } catch (error) {
     console.error("Error in getEmailsForFiltering:", error);
@@ -196,10 +196,10 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
  * If no angle brackets are found, trims and returns the original string.
  */
 function extractEmailAddress(from: string): string {
-    if (!from) return "";
-    const match = from.match(/<(.+)>/);
-    return (match ? match[1] : from).trim().toLowerCase();
-  }
+  if (!from) return "";
+  const match = from.match(/<(.+)>/);
+  return (match ? match[1] : from).trim().toLowerCase();
+}
 
 /**
  * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
@@ -232,11 +232,11 @@ export async function processAndApprove(
         $set: {
           isProcessed: true,
           isApproved: isApproved,
-        }
+        },
       }
-    )
+    );
 
-    res.json({email, message: "All sender emails updated"});
+    res.json({ email, message: "All sender emails updated" });
   } catch (err) {
     console.error("Failed to mark email as read:", err);
     res.status(500).json({ error: "Failed to mark email as read" });
@@ -303,7 +303,9 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
       }
       return null;
     }
-    const htmlData = payload?.parts ? findHtmlPart(payload.parts) : payload?.body?.data;
+    const htmlData = payload?.parts
+      ? findHtmlPart(payload.parts)
+      : payload?.body?.data;
     if (!htmlData) return res.status(404).json({ error: "No HTML body found" });
 
     const decodedBody = Buffer.from(htmlData, "base64").toString("utf-8");
@@ -347,17 +349,27 @@ export async function getEmailData(req: Request, res: Response): Promise<any> {
   }
 }
 
-export async function getAllowedEmails(req: Request, res: Response): Promise<any> {
-  const projectId = req.session.project_id
+export async function getAllowedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
+  const projectId = req.session.project_id;
 
-  const emails = await Email.find({ projectId, isApproved: true}). sort({ date: -1});
+  const emails = await Email.find({ projectId, isApproved: true }).sort({
+    date: -1,
+  });
   res.json({ emails });
 }
 
-export async function getBlockedEmails(req: Request, res: Response): Promise<any> {
-  const projectId = req.session.project_id
+export async function getBlockedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
+  const projectId = req.session.project_id;
 
-  const emails = await Email.find({ projectId, isApproved: false}). sort({ date: -1});
+  const emails = await Email.find({ projectId, isApproved: false }).sort({
+    date: -1,
+  });
   res.json({ emails });
 }
 // Assign OpportunityId to an email
@@ -368,6 +380,8 @@ export const emailAssignOpportunity = async (
   const { emailId } = req.params;
   const { opportunityId } = req.body;
 
+  console.log("Received opportunityId:", opportunityId);
+
   if (!emailId || !opportunityId) {
     return res.status(400).json({ error: "Missing required fields" });
   }
@@ -375,8 +389,9 @@ export const emailAssignOpportunity = async (
   try {
     const updatedEmail = await assignOpportunityToEmail(
       new Types.ObjectId(emailId),
-      opportunityId
+      new Types.ObjectId(opportunityId)
     );
+    console.log(updatedEmail);
     return res.status(200).json(updatedEmail);
   } catch (err: any) {
     console.error("Error assigning opportunity to email:", err.message);
@@ -410,20 +425,23 @@ export const emailsFromOpportunity = async (
  * Search email model for a specific title or sender
  */
 
-export async function fetchSearchedEmails (req: Request, res: Response): Promise<any> {
+export async function fetchSearchedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
   const { q } = req.query;
   const projectId = req.session.project_id;
-  console.log(q)
+  console.log(q);
 
   if (typeof q !== "string") {
-    return res.status(400).json({ error: "Invlid search query"})
+    return res.status(400).json({ error: "Invlid search query" });
   }
 
   try {
     const results = await searchEmail(projectId, q);
-    return res.json({ emails: results})
+    return res.json({ emails: results });
   } catch (err) {
     console.error("Search error:", err);
-    return res.status(500).json({error: "Search failed."});
+    return res.status(500).json({ error: "Search failed." });
   }
 }

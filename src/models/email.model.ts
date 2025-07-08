@@ -1,10 +1,4 @@
-import {
-  Schema,
-  model,
-  Document,
-  Types,
-  Model,
-} from "mongoose";
+import { Schema, model, Document, Types, Model } from "mongoose";
 
 export interface IEmail extends Document {
   projectId: Types.ObjectId;
@@ -51,36 +45,37 @@ interface IEmailModel extends Model<IEmail> {
   findByOppoId: (projectId: Types.ObjectId) => Promise<IEmail | null>;
 }
 
-
-const emailSchema = new Schema<IEmail>({
-  projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
-  // opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
-  mailBoxId: { type: String, unique: [true, 'Email must be unique'] },
-  subject: { type: String },
-  snippet: { type: String, required: false },
-  from: { type: String, required: true },
-  to: [{ type: String, required: true }],
-  cc: [{ type: String }],
-  bcc: [{ type: String }],
-  date: { type: Date },
-  isRead: { type: Boolean, default: false },
-  isProcessed: { type: Boolean, default: false },
-  isApproved: { type: Boolean }, //if the user processed and want to keep it is true
-  isTapped: { type: Boolean, default: false },
-  isDeleted: { type: Boolean, default: false },
-  isReplied: { type: Boolean, default: false },
-  isOutgoing: { type: Boolean, default: false },
-  threadId: { type: String },
-  body: { type: String },
-  raw: { type: String },
-}, {
-  timestamps: true
-}
+const emailSchema = new Schema<IEmail>(
+  {
+    projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    opportunityId: { type: Schema.Types.ObjectId, ref: "Opportunity" },
+    mailBoxId: { type: String, unique: [true, "Email must be unique"] },
+    subject: { type: String },
+    snippet: { type: String, required: false },
+    from: { type: String, required: true },
+    to: [{ type: String, required: true }],
+    cc: [{ type: String }],
+    bcc: [{ type: String }],
+    date: { type: Date },
+    isRead: { type: Boolean, default: false },
+    isProcessed: { type: Boolean, default: false },
+    isApproved: { type: Boolean }, //if the user processed and want to keep it is true
+    isTapped: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    isReplied: { type: Boolean, default: false },
+    isOutgoing: { type: Boolean, default: false },
+    threadId: { type: String },
+    body: { type: String },
+    raw: { type: String },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 // emailSchema.index({ subject: "text", from: "text" });
-emailSchema.index({ subject: 1 })
-emailSchema.index({ from: 1 })
+emailSchema.index({ subject: 1 });
+emailSchema.index({ from: 1 });
 
 // Instance method
 emailSchema.methods.updateStatus = async function (

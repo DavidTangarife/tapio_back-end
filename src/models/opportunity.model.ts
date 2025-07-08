@@ -12,7 +12,7 @@ interface IOpportunity extends Document {
   };
   isRejected?: boolean;
   jobAdUrl?: string;
-  snippets?: [string];
+  snippets?: [Object];
   description?: {
     location: string;
     type: string;
@@ -48,7 +48,7 @@ const opportunitySchema = new Schema<IOpportunity>(
       },
     },
     snippets: {
-      type: [String],
+      type: [Object],
       default: [],
     },
     description: {

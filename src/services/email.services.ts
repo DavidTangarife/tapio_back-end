@@ -38,20 +38,19 @@ export async function saveEmailsFromIMAP(
       console.error("Project not found");
       return;
     }
-    
+
     let existingFilters = project.filters ?? [];
     let existingBlocked = project.blocked ?? [];
-    newEmails.forEach(e => {
+    newEmails.forEach((e) => {
       const senderEmail = extractEmailAddress(e.from);
-      if (existingFilters.includes(senderEmail)){
-        e.isApproved= true;
+      if (existingFilters.includes(senderEmail)) {
+        e.isApproved = true;
         e.isProcessed = true;
-
       } else if (existingBlocked.includes(senderEmail)) {
         e.isApproved = false;
         e.isProcessed = true;
       }
-    })
+    });
     await Email.insertMany(newEmails);
     console.log(`Inserted ${newEmails.length} emails`);
 
@@ -132,7 +131,9 @@ export async function getFilterableEmails(projectId: string | Types.ObjectId) {
   const project = await Project.findById(projectId);
   if (!project) throw new Error("Project not found");
 
-  const emails = await Email.find({ projectId, isProcessed: false }).sort({ date: -1 });
+  const emails = await Email.find({ projectId, isProcessed: false }).sort({
+    date: -1,
+  });
 
   return emails;
 }
@@ -178,7 +179,7 @@ export async function getEmailsByOppoId(projectId: Types.ObjectId) {
   return await Email.findByOppoId(new Types.ObjectId(projectId));
 }
 /**
- * 
+ *
  */
 export async function searchEmail(projectId: string, query: string) {
   if (!query.trim()) return [];
@@ -187,6 +188,6 @@ export async function searchEmail(projectId: string, query: string) {
     $or: [
       { subject: { $regex: query, $options: "i" } },
       { from: { $regex: query, $options: "i" } },
-    ]
-  })
+    ],
+  });
 }

@@ -8,6 +8,7 @@ interface CreateOpportunityInput {
   company: {
     name: string;
   };
+  position: number
 }
 
 interface EditOpportunity {
@@ -34,6 +35,7 @@ function generateLogoUrl(companyName?: string): string {
 
 /* Create and return a new opportunity */
 export async function createOpportunity(data: CreateOpportunityInput) {
+  console.log(data)
   try {
     const logoUrl = generateLogoUrl(data.company.name);
     const opportunity = await Opportunity.create({
@@ -56,8 +58,23 @@ export async function getOpportunitiesByProject(projectId: Types.ObjectId) {
   return Opportunity.findOppByProjectId(projectId);
 }
 
-export async function getOpportunitiesByStatus(statusId: Types.ObjectId) {
-  return Opportunity.findOppByStatusId(statusId);
+export async function getOpportunitiesByStatus(statusId: string) {
+  return Opportunity.find({ statusId }).exec()
+}
+
+export async function updatePositionOfOrder(_id: string, position: number, status_id: string) {
+  try {
+    const opportunity = await Opportunity.findOne({ _id })
+    if (opportunity) {
+      opportunity.position = position
+      opportunity.statusId = new Types.ObjectId(status_id)
+      console.log(opportunity)
+      opportunity.save()
+      return
+    }
+  } catch (err) {
+    console.log('Error updating position ', err)
+  }
 }
 
 /* Update status of an opportunity (move card between columns) */

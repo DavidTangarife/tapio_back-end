@@ -1,14 +1,17 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   createOpportunity,
   getOpportunitiesByProject,
   updateOpportunityStatus,
   deleteOpportunity,
   updateOpportunity,
+  getOpportunitiesByStatus,
+  updatePositionOfOrder,
 } from "../services/opportunity.services";
 import { assignOpportunityToEmail } from "../services/email.services";
 import { ObjectId } from "bson";
 import { Types } from "mongoose";
+import { getStatusById } from "../services/status.services";
 
 export const createOpportunityController = async (
   req: Request,
@@ -23,11 +26,17 @@ export const createOpportunityController = async (
 
   try {
     // Creates the opportunity
+    const status = await getStatusById(statusId)
+    const opportunities = await getOpportunitiesByStatus(statusId)
+    const position = opportunities.length
+    console.log(opportunities)
+    console.log(position)
     const opportunity = await createOpportunity({
       projectId: new ObjectId(String(projectId)),
       statusId: new ObjectId(String(statusId)),
       title,
       company,
+      position
     });
     // Update the email with the opportunity ID
     await assignOpportunityToEmail(emailId, opportunity._id as Types.ObjectId);
@@ -129,3 +138,17 @@ export const UpdateOpportunityById = async (
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const updateOpportunityOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const projectId = req.session.project_id;
+  const data = req.body.data
+  console.log(data)
+  data.updateOrder.forEach((element) => {
+    const _id = element[0]
+    const position = element[1]
+    const status_id = element[2]
+    updatePositionOfOrder(_id, position, status_id)
+
+  })
+  res.status(200).json({ message: 'Success' })
+}

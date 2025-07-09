@@ -5,6 +5,7 @@ import {
   updateOpportunityStateController,
   UpdateOpportunityById,
   deleteOpportunityById,
+  updateOpportunityOrder,
 } from "../controllers/opportunity.controller";
 import requireAuth from "../middleware/require-auth";
 
@@ -15,5 +16,6 @@ router.get("/opportunity", requireAuth, getOpportunitiesByProjectController);
 router.patch("/opportunity/:opportunityId", updateOpportunityStateController);
 router.patch("/opportunity/:opportunityId/full", UpdateOpportunityById);
 router.delete("/opportunity/:opportunityId", deleteOpportunityById);
+router.patch("/update-opportunity-order", updateOpportunityOrder);
 
 export default router;

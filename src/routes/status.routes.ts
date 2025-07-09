@@ -4,6 +4,7 @@ import {
   getKanbanController,
   handleGetStatusesByProject,
   newStatusColumn,
+  updateColumnOrder,
   updateStatusColumnName,
 } from "../controllers/status.controller";
 import requireAuth from "../middleware/require-auth";
@@ -15,6 +16,7 @@ router.get("/board", requireAuth, getKanbanController);
 router.get("/status", requireAuth, handleGetStatusesByProject);
 router.patch("/update-column", requireAuth, updateStatusColumnName);
 router.post("/create-column", requireAuth, newStatusColumn)
+router.patch("/update-column-order", requireAuth, updateColumnOrder)
 
 
 export default router;

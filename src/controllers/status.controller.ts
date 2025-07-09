@@ -3,6 +3,7 @@ import { ObjectId } from "bson";
 import {
   createStatus,
   getStatusesByProject,
+  updateStatusOrder,
 } from "../services/status.services";
 import { Types } from "mongoose";
 import { getOpportunitiesByProject } from "../services/opportunity.services";
@@ -57,6 +58,7 @@ export const getKanbanController = async (
     const statuses = await getStatusesByProject(projectId);
     const opportunities = await getOpportunitiesByProject(projectId);
 
+    console.log(opportunities)
     // Group opportunities under their status
     const kanbanData = statuses.map((status) => {
       const statusOpportunities = opportunities.filter(
@@ -112,12 +114,24 @@ export const updateStatusColumnName = async (req: Request, res: Response, next: 
 
 export const newStatusColumn = async (req: Request, res: Response, next: NextFunction) => {
   const projectId = req.session.project_id;
-  const title = req.body.title
+  const { title, order } = req.body
   try {
-    const status = await createStatus({ projectId, title })
+    const status = await createStatus({ projectId, title, order })
     console.log('Created Status')
+    console.log(status)
     res.status(200).json({ message: 'Created Status', status: status })
   } catch (err) {
     next(err)
   }
+}
+
+export const updateColumnOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const projectId = req.session.project_id;
+  const data = req.body.data
+  data.forEach((element) => {
+    const _id = element[0]
+    const order = element[1]
+    updateStatusOrder(_id, order)
+  })
+  res.status(200).json({ message: 'Success' })
 }

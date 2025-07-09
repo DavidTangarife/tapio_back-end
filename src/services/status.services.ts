@@ -5,6 +5,7 @@ interface CreateStatusInput {
   projectId: Types.ObjectId;
   title: string;
   color?: string;
+  order?: number;
 }
 
 /* Create and return a new project */
@@ -29,7 +30,7 @@ export async function getStatusesByProject(projectId: Types.ObjectId) {
 /* Update a status (rename or change color) */
 export async function updateStatus(
   statusId: Types.ObjectId,
-  updates: { title?: string; color?: string }
+  updates: { title?: string; color?: string; order?: number }
 ) {
   try {
     const status = await Status.findById(statusId);
@@ -48,3 +49,20 @@ export async function updateStatus(
   }
 }
 
+export async function getStatusById(_id: string) {
+  return Status.findOne({ _id }).exec()
+}
+
+
+export async function updateStatusOrder(_id: string, order: number) {
+  try {
+    const status = await Status.findOne({ _id });
+    if (status) {
+      status.order = order;
+      await status.save();
+      console.log('Updated ', _id)
+    }
+  } catch (err) {
+    console.log('Something went wrong while saving ', _id)
+  }
+}

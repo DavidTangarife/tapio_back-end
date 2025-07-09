@@ -19,6 +19,7 @@ interface IOpportunity extends Document {
     salary: string;
     posted: string;
   };
+  position: number
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,7 @@ const opportunitySchema = new Schema<IOpportunity>(
       salary: { type: String, default: "" },
       posted: { type: String, default: "" },
     },
+    position: { type: Number }
   },
   {
     timestamps: true,
@@ -64,19 +66,19 @@ const opportunitySchema = new Schema<IOpportunity>(
 );
 
 // Static method
-opportunitySchema.statics.findOppByProjectId = async function (
+opportunitySchema.statics.findOppByProjectId = async function(
   projectId: Types.ObjectId
 ) {
   return this.find({ projectId });
 };
-opportunitySchema.statics.findOppByStatusId = async function (
+opportunitySchema.statics.findOppByStatusId = async function(
   statusId: Types.ObjectId
 ) {
   return this.find({ statusId });
 };
 
 // pre saving validation
-opportunitySchema.pre("validate", async function (next) {
+opportunitySchema.pre("validate", async function(next) {
   const project = await Project.findById(this.projectId);
   if (!project) {
     return next(new Error("Project does not exist."));
@@ -85,7 +87,7 @@ opportunitySchema.pre("validate", async function (next) {
 });
 
 /* Show a message before saving */
-opportunitySchema.pre("save", function (next) {
+opportunitySchema.pre("save", function(next) {
   if (this.isNew) {
     console.log("Creating new opportunity...");
   }
@@ -93,7 +95,7 @@ opportunitySchema.pre("save", function (next) {
 });
 
 /* Show a message after saving */
-opportunitySchema.post("save", function (doc) {
+opportunitySchema.post("save", function(doc) {
   console.log(`Opportunity saved: ${doc._id}`);
 });
 

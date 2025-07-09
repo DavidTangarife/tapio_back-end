@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { ObjectId } from "bson";
 import {
   createStatus,
+  deleteStatusById,
   getStatusesByProject,
   updateStatusOrder,
 } from "../services/status.services";
@@ -133,5 +134,11 @@ export const updateColumnOrder = async (req: Request, res: Response, next: NextF
     const order = element[1]
     updateStatusOrder(_id, order)
   })
+  res.status(200).json({ message: 'Success' })
+}
+
+export const deleteStatus = async (req: Request, res: Response, next: NextFunction) => {
+  const _id = req.body._id
+  deleteStatusById(_id)
   res.status(200).json({ message: 'Success' })
 }

@@ -66,3 +66,12 @@ export async function updateStatusOrder(_id: string, order: number) {
     console.log('Something went wrong while saving ', _id)
   }
 }
+
+export async function deleteStatusById(_id: string) {
+  //TODO: This probably needs to be protected better but I'm trying to move quickly as we're getting closer
+  try {
+    const status = await Status.findOneAndDelete({ _id })
+  } catch (err) {
+    console.error(err)
+  }
+}

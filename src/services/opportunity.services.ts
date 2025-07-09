@@ -13,7 +13,8 @@ interface CreateOpportunityInput {
 interface EditOpportunity {
   statusId: Types.ObjectId;
   title: string;
-  snippets?: [string];
+  snippets?: [object];
+  snippFlag?: boolean;
   description?: {
     location: string;
     type: string;
@@ -85,11 +86,36 @@ export async function updateOpportunity(
   updatedFields: EditOpportunity
 ) {
   try {
+    var updateOps: any = {};
+    const { snippets, snippFlag } = updatedFields;
+
+    if (snippets && Array.isArray(snippets)) {
+      if (snippFlag) {
+        updateOps.$set = updateOps.$set || {};
+        updateOps.$set.snippets = snippets;
+      } else {
+        updateOps.$push = {
+          snippets: { $each: snippets },
+        };
+      }
+
+      delete updatedFields.snippets;
+      delete updatedFields.snippFlag;
+    }
+
+    if (Object.keys(updatedFields).length > 0) {
+      updateOps.$set = {
+        ...(updateOps.$set || {}),
+        ...updatedFields,
+      };
+    }
+
     const result = await Opportunity.findByIdAndUpdate(
       opportunityId,
-      { $set: updatedFields },
+      updateOps,
       { new: true }
     );
+
     if (!result) throw new Error("Opportunity not found");
     return result;
   } catch (err: any) {

@@ -29,7 +29,7 @@ export async function getEmailsForFiltering(
   try {
     const project_id = req.session.project_id;
     const senders = await getFilterableEmails(project_id);
-    console.log("not processed emails", senders)
+    console.log("not processed emails", senders);
     res.status(200).json(senders);
   } catch (error) {
     console.error("Error in getEmailsForFiltering:", error);
@@ -48,15 +48,17 @@ export const directEmails = async (
     const user = await getUserById(user_id);
 
     if (!user) {
-      return  res.redirect("http://localhost:5173/");
+      return res.redirect("http://localhost:5173/");
     }
     let fetchedCount = 0;
     if (user!.refresh_token) {
-      fetchedCount = await getGoogleEmailsByDate(req, res, next) || 0;
+      fetchedCount = (await getGoogleEmailsByDate(req, res, next)) || 0;
     } else if (user!.token_cache) {
-      fetchedCount = await getMicrosoftEmailsByDate(req, res, next) || 0;
+      fetchedCount = (await getMicrosoftEmailsByDate(req, res, next)) || 0;
     }
-    return res.status(200).json({ message: "Fetched emails", count: fetchedCount });
+    return res
+      .status(200)
+      .json({ message: "Fetched emails", count: fetchedCount });
   } catch (err: any) {
     next(err);
   }
@@ -76,15 +78,15 @@ export async function getInboxEmails(
 ): Promise<void> {
   const projectId = req.session.project_id;
   if (!projectId) {
-    res.status(400).json({ error: "No project selectd"});
+    res.status(400).json({ error: "No project selectd" });
     return;
   }
 
   const pageUnread = parseInt(req.query.unread as string) || 1;
   const pageRead = parseInt(req.query.read as string) || 1;
 
-  const limitUnread = parseInt( req.query.limitUnread as string) || 10;
-  const limitRead = parseInt( req.query.limitRead as string) || 10;
+  const limitUnread = parseInt(req.query.limitUnread as string) || 10;
+  const limitRead = parseInt(req.query.limitRead as string) || 10;
 
   try {
     const data = await fetchInboxEmails(
@@ -159,10 +161,10 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
  * If no angle brackets are found, trims and returns the original string.
  */
 function extractEmailAddress(from: string): string {
-    if (!from) return "";
-    const match = from.match(/<(.+)>/);
-    return (match ? match[1] : from).trim().toLowerCase();
-  }
+  if (!from) return "";
+  const match = from.match(/<(.+)>/);
+  return (match ? match[1] : from).trim().toLowerCase();
+}
 
 /**
  * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
@@ -195,11 +197,11 @@ export async function processAndApprove(
         $set: {
           isProcessed: true,
           isApproved: isApproved,
-        }
+        },
       }
-    )
+    );
 
-    res.json({email, message: "All sender emails updated"});
+    res.json({ email, message: "All sender emails updated" });
   } catch (err) {
     console.error("Failed to mark email as read:", err);
     res.status(500).json({ error: "Failed to mark email as read" });
@@ -214,7 +216,10 @@ export async function processAndApprove(
  * @param res - Express response object used to send the updated email or error.
  * @returns  Returns JSON with the updated email object if successful, or an error message
  */
-export async function updateOpportunityId(req: Request, res: Response): Promise<any> {
+export async function updateOpportunityId(
+  req: Request,
+  res: Response
+): Promise<any> {
   const { emailId, opportunityId } = req.body;
 
   try {
@@ -287,7 +292,9 @@ export async function getEmailBody(req: Request, res: Response): Promise<any> {
       }
       return null;
     }
-    const htmlData = payload?.parts ? findHtmlPart(payload.parts) : payload?.body?.data;
+    const htmlData = payload?.parts
+      ? findHtmlPart(payload.parts)
+      : payload?.body?.data;
     if (!htmlData) return res.status(404).json({ error: "No HTML body found" });
 
     const decodedBody = Buffer.from(htmlData, "base64").toString("utf-8");
@@ -322,17 +329,27 @@ export async function getEmailData(req: Request, res: Response): Promise<any> {
   }
 }
 
-export async function getAllowedEmails(req: Request, res: Response): Promise<any> {
-  const projectId = req.session.project_id
+export async function getAllowedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
+  const projectId = req.session.project_id;
 
-  const emails = await Email.find({ projectId, isApproved: true}). sort({ date: -1});
+  const emails = await Email.find({ projectId, isApproved: true }).sort({
+    date: -1,
+  });
   res.json({ emails });
 }
 
-export async function getBlockedEmails(req: Request, res: Response): Promise<any> {
-  const projectId = req.session.project_id
+export async function getBlockedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
+  const projectId = req.session.project_id;
 
-  const emails = await Email.find({ projectId, isApproved: false}). sort({ date: -1});
+  const emails = await Email.find({ projectId, isApproved: false }).sort({
+    date: -1,
+  });
   res.json({ emails });
 }
 
@@ -344,6 +361,8 @@ export const emailAssignOpportunity = async (
   const { emailId } = req.params;
   const { opportunityId } = req.body;
 
+  console.log("Received opportunityId:", opportunityId);
+
   if (!emailId || !opportunityId) {
     return res.status(400).json({ error: "Missing required fields" });
   }
@@ -351,8 +370,9 @@ export const emailAssignOpportunity = async (
   try {
     const updatedEmail = await assignOpportunityToEmail(
       new Types.ObjectId(emailId),
-      opportunityId
+      new Types.ObjectId(opportunityId)
     );
+    console.log(updatedEmail);
     return res.status(200).json(updatedEmail);
   } catch (err: any) {
     console.error("Error assigning opportunity to email:", err.message);
@@ -385,21 +405,23 @@ export const emailsFromOpportunity = async (
 /**
  * Search email model for a specific title or sender
  */
-export async function fetchSearchedEmails (req: Request, res: Response): Promise<any> {
+export async function fetchSearchedEmails(
+  req: Request,
+  res: Response
+): Promise<any> {
   const { q } = req.query;
   const projectId = req.session.project_id;
-  console.log(q)
+  console.log(q);
 
   if (typeof q !== "string") {
-    return res.status(400).json({ error: "Invlid search query"})
+    return res.status(400).json({ error: "Invlid search query" });
   }
 
   try {
     const results = await searchEmail(projectId, q);
-    return res.json({ emails: results})
+    return res.json({ emails: results });
   } catch (err) {
     console.error("Search error:", err);
-    return res.status(500).json({error: "Search failed."});
+    return res.status(500).json({ error: "Search failed." });
   }
 }
-

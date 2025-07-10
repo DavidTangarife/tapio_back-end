@@ -219,14 +219,23 @@ export async function getEmailsByOppoId(projectId: Types.ObjectId) {
 /**
  *
  */
-export async function searchEmail(projectId: string, query: string) {
+export async function searchEmail(projectId: string, query: string, filterType?: "new" | "allowed" | "blocked") {
   if (!query.trim()) return [];
-  return Email.find({
+  const baseFilter: any = {
     projectId,
-    isApproved: true,
     $or: [
       { subject: { $regex: query, $options: "i" } },
       { from: { $regex: query, $options: "i" } },
-    ],
-  });
+    ]};
+  if (filterType === "allowed") {
+    baseFilter.isProcessed = true;
+    baseFilter.isApproved = true;
+  } else if (filterType === "blocked") {
+    baseFilter.isProcessed = true;
+    baseFilter.isApproved = false;
+  } else if (filterType === "new") {
+    baseFilter.isProcessed = false;
+  }
+
+  return Email.find(baseFilter);
 }

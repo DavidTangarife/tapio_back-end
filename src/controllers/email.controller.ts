@@ -409,16 +409,16 @@ export async function fetchSearchedEmails(
   req: Request,
   res: Response
 ): Promise<any> {
-  const { q } = req.query;
-  const projectId = req.session.project_id;
-  console.log(q);
-
-  if (typeof q !== "string") {
+  const query = req.query.q?.toString().trim();
+  const projectId = req.session.project_id
+  const filterType = req.query.filterType?.toString();
+  
+  if (typeof query !== "string") {
     return res.status(400).json({ error: "Invlid search query" });
   }
 
   try {
-    const results = await searchEmail(projectId, q);
+    const results = await searchEmail(projectId, query, filterType as any);
     return res.json({ emails: results });
   } catch (err) {
     console.error("Search error:", err);

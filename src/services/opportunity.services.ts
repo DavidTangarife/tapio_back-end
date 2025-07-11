@@ -22,6 +22,7 @@ interface EditOpportunity {
     salary: string;
     posted: string;
   };
+  success?: boolean;
 }
 
 /* Logic to generate the LogoURL */
@@ -104,7 +105,11 @@ export async function updateOpportunity(
 ) {
   try {
     var updateOps: any = {};
-    const { snippets, snippFlag } = updatedFields;
+    const { snippets , snippFlag, success } = updatedFields;
+
+    if (success) {
+      console.log("congratulation")
+    }
 
     if (snippets && Array.isArray(snippets)) {
       if (snippFlag) {

@@ -5,6 +5,7 @@ interface ISchema extends Document {
   title: string;
   order?: Number;
   color?: string;
+  deletable:Boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +16,7 @@ const statusSchema = new Schema<ISchema>(
     title: { type: String, required: true, trim: true },
     order: { type: Number },
     color: { type: String, default: "gray" },
+    deletable: { type: Boolean, default: true }
   },
   {
     timestamps: true,

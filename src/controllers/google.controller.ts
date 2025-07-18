@@ -4,6 +4,7 @@ import {
   get_google_auth_url_email,
   getGmailApi,
   processGoogleCode,
+  sendGmailEmail,
 } from "../services/google";
 import { parse } from "url";
 import { OAuth2Client } from "googleapis-common";
@@ -39,11 +40,13 @@ export const handleGoogleRedirect = async (req: Request, res: Response, next: Ne
 
   if (query.error) next(query.error);
   checkState(req, String(query.state));
+  console.log('\n\n', query.code, '\n\n')
   const result = await processGoogleCode(String(query.code), google_client);
   const userData: GoogleUserData = {
     email: result.email!,
     refresh_token: result.refresh_token!,
   };
+  console.log(userData)
   const user = await findOrCreateUserFromGoogle(userData);
 
   req.session.user_id = user._id;
@@ -72,7 +75,7 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
   }
   const user_account = await getUserById(user_id);
   const project = await getProjectById(project_id)
- if (!user_account || !project) {
+  if (!user_account || !project) {
     return res.status(404).json({ error: "User or project not found" });
   }
   const baseDate = project.lastEmailSync ?? project.startDate;
@@ -83,7 +86,7 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
   let savedCount = 0;
   if (emails && emails.length > 0) {
     savedCount = await saveEmailsFromIMAP(emails);
-    if (savedCount > 0){
+    if (savedCount > 0) {
       await inboxConnected(project_id);
     }
   } else {
@@ -92,3 +95,13 @@ export const getGoogleEmailsByDate = async (req: Request, res: Response, next: N
   await updateLastSync(project_id);
   return savedCount || 0;
 };
+
+export const sendEmail = async (req: Request, res: Response, next: NextFunction) => {
+  const user_id = req.session.user_id;
+  const user_account = await getUserById(user_id)
+
+  if (user_account) {
+    sendGmailEmail(user_account.email, user_account.refresh_token!, req.body)
+  }
+  res.send('OK')
+}

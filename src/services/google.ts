@@ -4,7 +4,7 @@ import { OAuth2Client } from 'googleapis-common';
 import { Types } from 'mongoose'
 import Email, { IEmail } from '../models/email.model'
 import { emailInfo } from '../types/email';
-
+import { createTransport, Transporter } from 'nodemailer';
 
 google.options({
   http2: false
@@ -100,6 +100,7 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
   const query = `after:${date.getTime().toString().substring(0, 10)}`
   const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
+  console.log(emails)
   let payload: string[] = (emails.data.messages! || []).map((x) => x.id!.toString())
   const email_list: any[] = [];
 
@@ -151,7 +152,8 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
             const from = payload.headers.find((x: any) => x.name === 'From')?.value
             const subject = payload.headers.find((x: any) => x.name === 'Subject')?.value
             const date = payload.headers.find((x: any) => x.name === 'Date')?.value
-            email_list.push({ mailBoxId: id, snippet, from, subject, projectId, date })
+            const threadId = payload.headers.find((x: any) => x.name === 'Message-ID')?.value
+            email_list.push({ mailBoxId: id, snippet, from, subject, projectId, date, threadId })
           }
           //==============================
           // Otherwise request failed.
@@ -202,3 +204,43 @@ const batchGetEmails = async (ids: any, access_token: string) => {
   return result
 }
 
+export const sendGmailEmail = async (user_email: string, refresh_token: string, body: any) => {
+  const { message, to, inReplyTo, subject, replyChunk } = body
+  const auth_client = get_google_auth_client();
+  auth_client.setCredentials({ refresh_token: refresh_token })
+  const { token } = await auth_client.getAccessToken()
+
+  const transport: Transporter = await createNodemailerTransport(user_email, token!)
+  const rawTohtml = rawToHTML(message, replyChunk)
+  const cleanedSubject = subject.startsWith("Re: ") ? subject : "Re: " + subject;
+
+  const send = await transport.sendMail({
+    from: "Jacob Phelan <jacobsdevsmail@gmail.com>",
+    to,
+    subject: cleanedSubject,
+    text: message,
+    html: rawTohtml,
+    inReplyTo: inReplyTo + '@gmail.com',
+    references: [inReplyTo + '@gmail.com']
+  });
+  console.log("Sent ", send)
+}
+
+const createNodemailerTransport = async (user_email: string, access_token: string) => {
+  const transport: Transporter = createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: user_email,
+      accessToken: access_token
+    },
+  });
+  return transport
+}
+
+const rawToHTML = (input: string, replyChunk: string) => {
+  let string = `<p>${input}</p>`
+  string = string.split('\n').join('<br>')
+  string = '<div dir="auto">' + string + '</div><br>' + replyChunk
+  return string
+}

@@ -30,7 +30,7 @@ function generateLogoUrl(companyName?: string): string {
   if (!companyName) {
     return "/default-logo.png";
   }
-  const domain = companyName.toLowerCase().replace(/\s+/g, "") + ".com";
+  const domain = companyName.toLowerCase().replace(/\s+/g, "") + ".com.au";
   return `https://img.logo.dev/${domain}`;
 }
 

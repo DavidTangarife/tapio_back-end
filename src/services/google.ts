@@ -149,7 +149,6 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
           // extract more important data
           //============================
           if (payload !== undefined) {
-            console.log(payload)
             const from = payload.headers.find((x: any) => x.name === 'From')?.value
             const subject = payload.headers.find((x: any) => x.name === 'Subject')?.value
             const date = payload.headers.find((x: any) => x.name === 'Date')?.value

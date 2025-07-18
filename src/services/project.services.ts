@@ -26,7 +26,7 @@ export async function createProject(data: CreateProjectInput): Promise<IProject>
     { title: "To review", order: 1 },
     { title: "Applied", order: 2 },
     { title: "Interviewing", order: 3 },
-    { title: "offer", order: 4 },
+    { title: "Success", order: 4, deletable: false },
   ];
 
   try {

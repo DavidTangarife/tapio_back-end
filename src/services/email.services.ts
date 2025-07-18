@@ -116,9 +116,13 @@ function buildRegexFilter(include?: string[], exclude?: string[]): any | null {
  */
 function extractEmailAddress(from: string): string {
   if (!from) return "";
-  const match = from.match(/<(.+)>/);
-  return (match ? match[1] : from).trim().toLowerCase();
-}
+  // Remove invisible characters (like zero-width spaces)
+  const cleanFrom = from.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+  const angleMatch = cleanFrom.match(/<([^<>]+)>/);
+  if (angleMatch) return angleMatch[1].trim().toLowerCase();
+  const emailMatch = cleanFrom.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  return (emailMatch ? emailMatch[0] : "").trim().toLowerCase();
+  }
 
 /**
  * Fetches a list of unique email senders from a project's emails.

@@ -19,7 +19,8 @@ interface IOpportunity extends Document {
     salary: string;
     posted: string;
   };
-  position: number
+  position: number;
+  success?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,7 +59,8 @@ const opportunitySchema = new Schema<IOpportunity>(
       salary: { type: String, default: "" },
       posted: { type: String, default: "" },
     },
-    position: { type: Number }
+    position: { type: Number },
+    success: { type: Boolean, default: false}
   },
   {
     timestamps: true,

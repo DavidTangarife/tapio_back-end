@@ -17,6 +17,7 @@
     "@azure/msal-node": "^3.5.3",
     "@types/express-session": "^1.18.1",
     "@types/node-imap": "^0.9.3",
+    "@types/nodemailer": "^6.4.17",
     "axios": "^1.9.0",
     "connect-mongo": "^5.1.0",
     "connect-mongodb-session": "^5.0.0",
@@ -35,6 +36,7 @@
     "mongoose": "^8.14.2",
     "morgan": "~1.9.1",
     "node-imap": "^0.9.6",
+    "nodemailer": "^7.0.5",
     "nodemon": "^3.1.10",
     "xoauth2": "^1.2.0"
   },

@@ -101,7 +101,7 @@ export const sendEmail = async (req: Request, res: Response, next: NextFunction)
   const user_account = await getUserById(user_id)
 
   if (user_account) {
-    sendGmailEmail(user_account.email, user_account.refresh_token!, req.body)
+    sendGmailEmail(user_account, req.body)
   }
   res.send('OK')
 }

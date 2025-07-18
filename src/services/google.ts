@@ -204,18 +204,20 @@ const batchGetEmails = async (ids: any, access_token: string) => {
   return result
 }
 
-export const sendGmailEmail = async (user_email: string, refresh_token: string, body: any) => {
+export const sendGmailEmail = async (user_data: any, body: any) => {
   const { message, to, inReplyTo, subject, replyChunk } = body
+  console.log(user_data)
+  const { refresh_token, email, fullName } = user_data
   const auth_client = get_google_auth_client();
   auth_client.setCredentials({ refresh_token: refresh_token })
   const { token } = await auth_client.getAccessToken()
 
-  const transport: Transporter = await createNodemailerTransport(user_email, token!)
+  const transport: Transporter = await createNodemailerTransport(email, token!)
   const rawTohtml = rawToHTML(message, replyChunk)
   const cleanedSubject = subject.startsWith("Re: ") ? subject : "Re: " + subject;
 
   const send = await transport.sendMail({
-    from: "Jacob Phelan <jacobsdevsmail@gmail.com>",
+    from: `${fullName} <${email}>`,
     to,
     subject: cleanedSubject,
     text: message,

@@ -20,5 +20,4 @@ router.post("/create-column", requireAuth, newStatusColumn);
 router.patch("/update-column-order", requireAuth, updateColumnOrder);
 router.delete("/status", requireAuth, deleteStatus);
 
-
 export default router;

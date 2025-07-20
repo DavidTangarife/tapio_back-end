@@ -8,7 +8,7 @@ interface CreateOpportunityInput {
   company: {
     name: string;
   };
-  position: number
+  position: number;
 }
 
 interface EditOpportunity {
@@ -30,13 +30,13 @@ function generateLogoUrl(companyName?: string): string {
   if (!companyName) {
     return "/default-logo.png";
   }
-  const domain = companyName.toLowerCase().replace(/\s+/g, "") + ".com";
+  const domain = companyName.toLowerCase().replace(/\s+/g, "") + ".com.au";
   return `https://img.logo.dev/${domain}`;
 }
 
 /* Create and return a new opportunity */
 export async function createOpportunity(data: CreateOpportunityInput) {
-  console.log(data)
+  console.log(data);
   try {
     const logoUrl = generateLogoUrl(data.company.name);
     const opportunity = await Opportunity.create({
@@ -60,21 +60,25 @@ export async function getOpportunitiesByProject(projectId: Types.ObjectId) {
 }
 
 export async function getOpportunitiesByStatus(statusId: string) {
-  return Opportunity.find({ statusId }).exec()
+  return Opportunity.find({ statusId }).exec();
 }
 
-export async function updatePositionOfOrder(_id: string, position: number, status_id: string) {
+export async function updatePositionOfOrder(
+  _id: string,
+  position: number,
+  status_id: string
+) {
   try {
-    const opportunity = await Opportunity.findOne({ _id })
+    const opportunity = await Opportunity.findOne({ _id });
     if (opportunity) {
-      opportunity.position = position
-      opportunity.statusId = new Types.ObjectId(status_id)
-      console.log(opportunity)
-      opportunity.save()
-      return
+      opportunity.position = position;
+      opportunity.statusId = new Types.ObjectId(status_id);
+      console.log(opportunity);
+      opportunity.save();
+      return;
     }
   } catch (err) {
-    console.log('Error updating position ', err)
+    console.log("Error updating position ", err);
   }
 }
 
@@ -105,10 +109,10 @@ export async function updateOpportunity(
 ) {
   try {
     var updateOps: any = {};
-    const { snippets , snippFlag, success } = updatedFields;
+    const { snippets, snippFlag, success } = updatedFields;
 
     if (success) {
-      console.log("congratulation")
+      console.log("congratulation");
     }
 
     if (snippets && Array.isArray(snippets)) {
@@ -155,6 +159,20 @@ export async function deleteOpportunity(opportunityId: Types.ObjectId) {
       throw new Error("Opportunity not found or already deleted.");
     }
 
+    return true;
+  } catch (err: any) {
+    console.error("Error in delete Opportunity:", err.message);
+    throw new Error("Failed to delete opportunity.");
+  }
+}
+
+export async function deleteOpportunitiesByStatusId(statusId: Types.ObjectId) {
+  try {
+    const result = await Opportunity.deleteMany({ statusId });
+
+    if (result.deletedCount === 0) {
+      throw new Error("Opportunity not found or already deleted.");
+    }
     return true;
   } catch (err: any) {
     console.error("Error in delete Opportunity:", err.message);

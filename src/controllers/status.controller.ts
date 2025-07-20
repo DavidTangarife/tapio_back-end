@@ -7,8 +7,11 @@ import {
   updateStatusOrder,
 } from "../services/status.services";
 import { Types } from "mongoose";
-import { getOpportunitiesByProject } from "../services/opportunity.services";
-import Status from "../models/status.model"
+import {
+  getOpportunitiesByProject,
+  deleteOpportunitiesByStatusId,
+} from "../services/opportunity.services";
+import Status from "../models/status.model";
 
 export const createStatusController = async (
   req: Request,
@@ -41,13 +44,13 @@ export const getKanbanController = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const projectId = req.session.project_id;
 
-  console.log(projectId)
-  console.log(req.session)
+  console.log(projectId);
+  console.log(req.session);
   if (!user) {
-    res.redirect('http://localhost:5173/')
+    res.redirect("http://localhost:5173/");
   }
   if (!projectId) {
     return res
@@ -59,7 +62,7 @@ export const getKanbanController = async (
     const statuses = await getStatusesByProject(projectId);
     const opportunities = await getOpportunitiesByProject(projectId);
 
-    console.log(opportunities)
+    console.log(opportunities);
     // Group opportunities under their status
     const kanbanData = statuses.map((status) => {
       const statusOpportunities = opportunities.filter(
@@ -74,7 +77,7 @@ export const getKanbanController = async (
       };
     });
 
-    console.log(kanbanData)
+    console.log(kanbanData);
     res.status(200).json(kanbanData);
   } catch (err: any) {
     console.error("Error in getKanban:", err.message);
@@ -85,7 +88,10 @@ export const getKanbanController = async (
 /**
  * Get the statuses for a project
  */
-export const handleGetStatusesByProject = async (req: Request, res: Response): Promise<any> => {
+export const handleGetStatusesByProject = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   const projectId = req.session.project_id;
 
   try {
@@ -97,48 +103,69 @@ export const handleGetStatusesByProject = async (req: Request, res: Response): P
   }
 };
 
-export const updateStatusColumnName = async (req: Request, res: Response, next: NextFunction) => {
+export const updateStatusColumnName = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const projectId = req.session.project_id;
   try {
-    const status = await Status.findOne({ _id: req.body.id })
+    const status = await Status.findOne({ _id: req.body.id });
     if (status) {
-      status.title = req.body.name
-      status.save()
-      res.status(200).send()
+      status.title = req.body.name;
+      status.save();
+      res.status(200).send();
     } else {
-      res.status(404).json({ error: "Project Status not found!" })
+      res.status(404).json({ error: "Project Status not found!" });
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
 
-export const newStatusColumn = async (req: Request, res: Response, next: NextFunction) => {
+export const newStatusColumn = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const projectId = req.session.project_id;
-  const { title, order } = req.body
+  const { title, order } = req.body;
   try {
-    const status = await createStatus({ projectId, title, order })
-    console.log('Created Status')
-    console.log(status)
-    res.status(200).json({ message: 'Created Status', status: status })
+    const status = await createStatus({ projectId, title, order });
+    console.log("Created Status");
+    console.log(status);
+    res.status(200).json({ message: "Created Status", status: status });
   } catch (err) {
-    next(err)
+    next(err);
   }
-}
+};
 
-export const updateColumnOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const updateColumnOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const projectId = req.session.project_id;
-  const data = req.body.data
+  const data = req.body.data;
   data.forEach((element) => {
-    const _id = element[0]
-    const order = element[1]
-    updateStatusOrder(_id, order)
-  })
-  res.status(200).json({ message: 'Success' })
-}
+    const _id = element[0];
+    const order = element[1];
+    updateStatusOrder(_id, order);
+  });
+  res.status(200).json({ message: "Success" });
+};
 
-export const deleteStatus = async (req: Request, res: Response, next: NextFunction) => {
-  const _id = req.body._id
-  deleteStatusById(_id)
-  res.status(200).json({ message: 'Success' })
-}
+export const deleteStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const _id = req.body._id;
+    await deleteStatusById(_id);
+    await deleteOpportunitiesByStatusId(_id);
+    res.status(200).json({ message: "Success" });
+  } catch (err) {
+    next(err);
+  }
+};

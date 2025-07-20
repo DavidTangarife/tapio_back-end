@@ -78,7 +78,7 @@ emailSchema.index({ subject: 1 });
 emailSchema.index({ from: 1 });
 
 // Instance method
-emailSchema.methods.updateStatus = async function (
+emailSchema.methods.updateStatus = async function(
   updates: Partial<
     Pick<
       IEmail,
@@ -97,20 +97,20 @@ emailSchema.methods.updateStatus = async function (
 };
 
 // Static method email by project
-emailSchema.statics.findByProjectId = async function (
+emailSchema.statics.findByProjectId = async function(
   projectId: Types.ObjectId
 ) {
   return this.find({ projectId });
 };
 
 // Static method emails by opportunity
-emailSchema.statics.findByOppoId = async function (
+emailSchema.statics.findByOppoId = async function(
   opportunityId: Types.ObjectId
 ) {
   return this.find({ opportunityId });
 };
 
-emailSchema.post("save", function (doc) {
+emailSchema.post("save", function(doc) {
   console.log(`Email saved: ${doc._id}`);
 });
 

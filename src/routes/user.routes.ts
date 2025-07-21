@@ -5,12 +5,14 @@ import {
   handleGoogleAuth,
   checkForUser,
   logoutUser,
+  handleGetUserEmail,
 } from "../controllers/user.controller";
 import requireAuth from "../middleware/require-auth";
 const router = express.Router();
 
 router.put("/update-name", handleUpdateUserName);
 router.get("/full-name", requireAuth, handleGetUserName);
+router.get("/get-me", requireAuth, handleGetUserEmail)
 router.get("/users/check", checkForUser);
 router.post("/users/logout", logoutUser);
 router.patch("/update-name", requireAuth, handleUpdateUserName);

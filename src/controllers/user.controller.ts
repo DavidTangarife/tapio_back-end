@@ -3,6 +3,7 @@ import {
   getUserName,
   updateUserFullName,
   findOrCreateUserFromGoogle,
+  getUserById,
 } from "../services/user.services";
 
 export const handleUpdateUserName = async (
@@ -81,4 +82,12 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
     if (err) next(err)
     res.status(200).json({ logout: true })
   })
+}
+
+export const handleGetUserEmail = async (req: Request, res: Response, next: NextFunction) => {
+  const { user_id } = req.session
+  const { email } = await getUserById(user_id)
+  if (email) {
+    res.status(200).json({ email: email })
+  }
 }

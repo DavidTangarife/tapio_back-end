@@ -221,9 +221,14 @@ export async function getEmailsByOppoId(projectId: Types.ObjectId) {
   return await Email.findByOppoId(new Types.ObjectId(projectId));
 }
 /**
- *
+ * Search email model in different constraints passing from controller function
  */
-export async function searchEmail(projectId: string, query: string, filterType?: "new" | "allowed" | "blocked") {
+export async function searchEmail(
+  projectId: string,
+  query: string,
+  onlyApproved: Boolean,
+  filterType?: "new" | "allowed" | "blocked",
+) {
   if (!query.trim()) return [];
   const baseFilter: any = {
     projectId,
@@ -239,6 +244,10 @@ export async function searchEmail(projectId: string, query: string, filterType?:
     baseFilter.isApproved = false;
   } else if (filterType === "new") {
     baseFilter.isProcessed = false;
+  }
+
+  if (onlyApproved && baseFilter.isApproved === undefined) {
+    baseFilter.isApproved  = true;
   }
 
   return Email.find(baseFilter);

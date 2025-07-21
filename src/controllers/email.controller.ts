@@ -416,13 +416,14 @@ export async function fetchSearchedEmails(
   const query = req.query.q?.toString().trim();
   const projectId = req.session.project_id
   const filterType = req.query.filterType?.toString();
-  
+  const onlyApproved = req.query.onlyApproved === 'true';
+
   if (typeof query !== "string") {
-    return res.status(400).json({ error: "Invlid search query" });
+    return res.status(400).json({ error: "Invalid search query" });
   }
 
   try {
-    const results = await searchEmail(projectId, query, filterType as any);
+    const results = await searchEmail(projectId, query, onlyApproved, filterType as any);
     return res.json({ emails: results });
   } catch (err) {
     console.error("Search error:", err);

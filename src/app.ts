@@ -9,6 +9,7 @@ import microsoftRouter from "./routes/microsoft.routes";
 import opportunityRoutes from "./routes/opportunity.routes";
 import statusRoutes from "./routes/status.routes";
 import testAuth from "./routes/auth.route";
+import templateRoutes from "./routes/template.route"
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
@@ -58,6 +59,7 @@ export default function createApp(): Application {
   app.use("/api", emailRoutes);
   app.use("/api", opportunityRoutes);
   app.use("/api", statusRoutes);
+  app.use("/api", templateRoutes)
   //===================================================
   // Error Handling Middleware
   //

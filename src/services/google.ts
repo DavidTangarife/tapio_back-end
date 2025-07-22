@@ -31,7 +31,11 @@ export function get_google_auth_url_email(client: Auth.OAuth2Client, state: stri
   const url: string = client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: ['email', 'https://mail.google.com/'],
+    scope: [
+      'email', 
+      'https://mail.google.com/', 
+      'https://www.googleapis.com/auth/calendar'
+    ],
     state: state,
     include_granted_scopes: true
   });
@@ -247,4 +251,28 @@ const rawToHTML = (input: string, replyChunk: string) => {
   string = string.split('\n').join('<br>')
   string = '<div dir="auto">' + string + '</div><br>' + replyChunk
   return string
+}
+
+export async function createCalendarEvent(user_data : any, eventData: any){
+  try {
+    const authClient: Auth.OAuth2Client = get_google_auth_client();
+
+    if (!user_data?.refresh_token) {
+      throw new Error('Missing refresh token.');
+    }
+
+    authClient.setCredentials({ refresh_token: user_data.refresh_token });
+
+    const calendar = google.calendar({ version: 'v3', auth: authClient });
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: eventData,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Failed to create calendar event:', error);
+    throw new Error('Failed to create calendar event');
+  }
 }

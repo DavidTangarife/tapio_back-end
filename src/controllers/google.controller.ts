@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import {
+  createCalendarEvent,
   get_google_auth_client,
   get_google_auth_url_email,
   getGmailApi,
@@ -104,4 +105,39 @@ export const sendEmail = async (req: Request, res: Response, next: NextFunction)
     sendGmailEmail(user_account, req.body)
   }
   res.send('OK')
+}
+
+
+export const createCalendarEventController = async (req: Request, res: Response, next: NextFunction) :Promise<number | any> => {
+  const userId = req.session.user_id;
+  const user = await getUserById(userId);
+
+  if (!user || !user.refresh_token) {
+    return res.status(403).json({ error: "No refresh token found for user" });
+  }
+  const {title, description, location} = req.body;
+  const eventData = {
+    summary: title,
+    description,
+    location,
+    start: {
+      dateTime: '2025-07-25T10:30:00+10:00', // Change the date here
+      timeZone: "Australia/Sydney"
+    },
+    end: {
+      dateTime: '2025-07-25T11:30:00+10:00', // Change the date here
+      timeZone: "Australia/Sydney"
+    },
+  };
+  try {
+    const calendarEvent = await createCalendarEvent(user, eventData);
+
+    return res.status(200).json({
+      success: true,
+      event: calendarEvent,
+    });
+  } catch (err) {
+    console.error("Failed to create calendar event:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 }

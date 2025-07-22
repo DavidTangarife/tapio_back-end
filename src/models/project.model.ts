@@ -24,7 +24,7 @@ interface IProjectModel extends Model<IProject> {
 
 const projectSchema = new Schema<IProject>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  name: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   startDate: { type: Date, required: true },
   filters: [{ type: String }],
   blocked: [{ type: String }],

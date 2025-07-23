@@ -32,8 +32,8 @@ export function get_google_auth_url_email(client: Auth.OAuth2Client, state: stri
     access_type: "offline",
     prompt: "consent",
     scope: [
-      'email', 
-      'https://mail.google.com/', 
+      'email',
+      'https://mail.google.com/',
       'https://www.googleapis.com/auth/calendar'
     ],
     state: state,
@@ -103,7 +103,7 @@ export const getGmailApi = async (refresh_token: string, projectId: Types.Object
   //===========================================
   const gmail = google.gmail({ version: 'v1', auth: auth_client });
   const query = `after:${date.getTime().toString().substring(0, 10)}`
-  const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query })
+  const emails = await gmail.users.messages.list({ userId: 'me', maxResults: 1000, q: query, labelIds: ['INBOX'] })
   console.log(emails)
   let payload: string[] = (emails.data.messages! || []).map((x) => x.id!.toString())
   const email_list: any[] = [];
@@ -253,7 +253,7 @@ const rawToHTML = (input: string, replyChunk: string) => {
   return string
 }
 
-export async function createCalendarEvent(user_data : any, eventData: any){
+export async function createCalendarEvent(user_data: any, eventData: any) {
   try {
     const authClient: Auth.OAuth2Client = get_google_auth_client();
 

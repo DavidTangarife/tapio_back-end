@@ -78,7 +78,7 @@ export async function getInboxEmails(
 ): Promise<void> {
   const projectId = req.session.project_id;
   if (!projectId) {
-    res.status(400).json({ error: "No project selectd" });
+    res.status(400).json({ error: "No project selected" });
     return;
   }
 
@@ -161,14 +161,16 @@ export async function updateIsRead(req: Request, res: Response): Promise<any> {
  * If no angle brackets are found, trims and returns the original string.
  */
 function extractEmailAddress(from: string): string {
-    if (!from) return "";
+  if (!from) return "";
   // Remove invisible characters (like zero-width spaces)
   const cleanFrom = from.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   const angleMatch = cleanFrom.match(/<([^<>]+)>/);
   if (angleMatch) return angleMatch[1].trim().toLowerCase();
-  const emailMatch = cleanFrom.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const emailMatch = cleanFrom.match(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+  );
   return (emailMatch ? emailMatch[0] : "").trim().toLowerCase();
-  }
+}
 
 /**
  * Controller to update the `isProcessed` and 'isAllowed' property of an email object.
@@ -414,16 +416,21 @@ export async function fetchSearchedEmails(
   res: Response
 ): Promise<any> {
   const query = req.query.q?.toString().trim();
-  const projectId = req.session.project_id
+  const projectId = req.session.project_id;
   const filterType = req.query.filterType?.toString();
-  const onlyApproved = req.query.onlyApproved === 'true';
+  const onlyApproved = req.query.onlyApproved === "true";
 
   if (typeof query !== "string") {
     return res.status(400).json({ error: "Invalid search query" });
   }
 
   try {
-    const results = await searchEmail(projectId, query, onlyApproved, filterType as any);
+    const results = await searchEmail(
+      projectId,
+      query,
+      onlyApproved,
+      filterType as any
+    );
     return res.json({ emails: results });
   } catch (err) {
     console.error("Search error:", err);

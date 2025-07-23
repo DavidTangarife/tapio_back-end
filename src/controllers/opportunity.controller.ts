@@ -11,13 +11,14 @@ import {
 import { assignOpportunityToEmail } from "../services/email.services";
 import { ObjectId } from "bson";
 import { Types } from "mongoose";
+import Email from "../models/email.model";
 import { getStatusById } from "../services/status.services";
 
 export const createOpportunityController = async (
   req: Request,
   res: Response
 ): Promise<any> => {
-  const { statusId, title, company, emailId } = req.body;
+  const { statusId, title, company, emailId, domain } = req.body;
   const projectId = req.session.project_id;
 
   if (!projectId || !statusId || !title || !company?.name || !emailId) {
@@ -26,20 +27,33 @@ export const createOpportunityController = async (
 
   try {
     // Creates the opportunity
-    const status = await getStatusById(statusId)
-    const opportunities = await getOpportunitiesByStatus(statusId)
-    const position = opportunities.length
-    console.log(opportunities)
-    console.log(position)
+    const status = await getStatusById(statusId);
+    const opportunities = await getOpportunitiesByStatus(statusId);
+    const position = opportunities.length;
+
     const opportunity = await createOpportunity({
       projectId: new ObjectId(String(projectId)),
       statusId: new ObjectId(String(statusId)),
       title,
       company,
-      position
+      position,
     });
-    // Update the email with the opportunity ID
-    await assignOpportunityToEmail(emailId, opportunity._id as Types.ObjectId);
+
+    if (domain) {
+      await Email.updateMany(
+        {
+          projectId: projectId,
+          from: { $regex: `@${domain}$`, $options: "i" },
+        }, // regex = Expression that matches the domain, options = i "case-insensitive"
+        { $set: { opportunityId: opportunity._id } } // Set all the emails with that domain, this Opportunity ID
+      );
+    } else {
+      // Fallback: Just assign the single email if no domain is provided
+      await assignOpportunityToEmail(
+        emailId,
+        opportunity._id as Types.ObjectId
+      );
+    }
 
     res.status(201).json(opportunity);
   } catch (err: any) {
@@ -139,16 +153,19 @@ export const UpdateOpportunityById = async (
   }
 };
 
-export const updateOpportunityOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const updateOpportunityOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const projectId = req.session.project_id;
-  const data = req.body.data
-  console.log(data)
+  const data = req.body.data;
+  console.log(data);
   data.updateOrder.forEach((element) => {
-    const _id = element[0]
-    const position = element[1]
-    const status_id = element[2]
-    updatePositionOfOrder(_id, position, status_id)
-
-  })
-  res.status(200).json({ message: 'Success' })
-}
+    const _id = element[0];
+    const position = element[1];
+    const status_id = element[2];
+    updatePositionOfOrder(_id, position, status_id);
+  });
+  res.status(200).json({ message: "Success" });
+};

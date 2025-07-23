@@ -43,7 +43,7 @@ export const createOpportunityController = async (
       await Email.updateMany(
         {
           projectId: projectId,
-          from: { $regex: `@${domain}$`, $options: "i" },
+          from: {$regex: `<${domain}>$`, $options: "i" },
         }, // regex = Expression that matches the domain, options = i "case-insensitive"
         { $set: { opportunityId: opportunity._id } } // Set all the emails with that domain, this Opportunity ID
       );

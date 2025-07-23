@@ -115,17 +115,17 @@ export const createCalendarEventController = async (req: Request, res: Response,
   if (!user || !user.refresh_token) {
     return res.status(403).json({ error: "No refresh token found for user" });
   }
-  const {title, description, location} = req.body;
+  const {title, description,start, end, location} = req.body;
   const eventData = {
     summary: title,
     description,
     location,
     start: {
-      dateTime: '2025-07-25T10:30:00+10:00', // Change the date here
+      dateTime: start,
       timeZone: "Australia/Sydney"
     },
     end: {
-      dateTime: '2025-07-25T11:30:00+10:00', // Change the date here
+      dateTime: end,
       timeZone: "Australia/Sydney"
     },
   };

@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import Status from "../models/status.model"
 import Email from "../models/email.model"
 import Opportunity from "../models/opportunity.model";
+import Template from "../models/template.model"
 
 interface CreateProjectInput {
   userId: Types.ObjectId;
@@ -91,9 +92,9 @@ export async function updateProject(
  * @returns The updated project document.
  */
 export async function updateLastSync(projectId: string) {
-  try{
+  try {
     const project = await Project.findById(projectId)
-    if (project){
+    if (project) {
       project.lastEmailSync = new Date();
       await project?.save()
       return project;
@@ -101,7 +102,7 @@ export async function updateLastSync(projectId: string) {
   } catch (err) {
     console.error("Error in updating last sync:", err);
   }
- 
+
 }
 
 /**

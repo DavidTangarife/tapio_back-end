@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import User, { IUser } from "../models/user.model"
+import Template from "../models/template.model"
 
 interface GoogleUserData {
   email: string;
@@ -15,9 +16,20 @@ interface MicrosoftUserData {
 export async function findOrCreateUserFromGoogle(googleUserData: GoogleUserData): Promise<IUser> {
   const { email, refresh_token } = googleUserData;
   let user = await User.findOne({ email });
+  const defaultTemplates = [
+    { templateName: "Confirm Interview", text: "Hi There\n\nThank you so much for your email. I'm excited to chat with you further about this role.\n\nHave a great day!\n\nTapio Ted" }
+  ]
 
   if (!user) {
     user = await User.create({ email, refresh_token, onBoarded: false });
+    if (user) {
+      await Promise.all(
+        defaultTemplates.map((template) =>
+          Template.create({ ...template, userId: user!._id })
+        )
+      )
+    }
+    console.log("Default Templates created for user: ", user._id);
     return user;
   } else {
     // update refresh token if changed

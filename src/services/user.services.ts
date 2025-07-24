@@ -17,7 +17,8 @@ export async function findOrCreateUserFromGoogle(googleUserData: GoogleUserData)
   const { email, refresh_token } = googleUserData;
   let user = await User.findOne({ email });
   const defaultTemplates = [
-    { templateName: "Confirm Interview", text: "Hi There\n\nThank you so much for your email. I'm excited to chat with you further about this role.\n\nHave a great day!\n\nTapio Ted" }
+    { templateName: "Confirm Interview", text: "Hi There\n\nThank you so much for your email. I'm excited to chat with you further about this role.\n\nHave a great day!\n\nTapio Ted" },
+    { templateName: "Graceful Rejection", text: "Hello\n\nThank you for letting me know.\n\nI'd love to have some feedback to better prepare for future opportunities with you. Did you have a minute to chat about our interview?\n\nLooking forward to hearing from you.\n\nTapio Ted" }
   ]
 
   if (!user) {
